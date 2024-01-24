@@ -78,9 +78,9 @@ static bool gameMode = GAME_MODE;
 static bool fullScr = false;
 static void displayInitialCountdown();
 static void displayScore();
-static void displayText(GLfloat x, GLfloat y, GLfloat z, char* text, GLfloat scale);
-static void output(GLfloat x, GLfloat y, const char *string);
-static void greska(char* text);
+static void displayText(GLfloat x, GLfloat y, GLfloat z, const std::string& text, GLfloat scale);
+static void output(GLfloat x, GLfloat y, const std::string& text);
+static void greska(const std::string& text);
 static void DecLevelInit();
 static void DecTest();
 
@@ -1252,15 +1252,12 @@ static void enemyMovement(int enemy){
 
 
 //------------------------I S P I S   N A   E K R A N U---------------------------------------------
-static void output(GLfloat x, GLfloat y, char *string){
-    
-    char *p;
-
+static void output(GLfloat x, GLfloat y, const std::string& text) {
     glPushMatrix();
         glTranslatef(x, y, 0);
-        glScalef(1/152.38, 1/152.38, 1/152.38);
-        for (p = string; *p; p++)
-            glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
+        glScalef(1/152.38f, 1/152.38f, 1/152.38f);
+        for (const char& c : text)
+            glutStrokeCharacter(GLUT_STROKE_ROMAN, c);
     glPopMatrix();
 }
 static void displayInitialCountdown(){
@@ -1309,7 +1306,7 @@ static void displayScore() {
     glDisable(GL_LINE_SMOOTH);
 }
 
-static void displayText(GLfloat x, GLfloat y, GLfloat z, char* text, GLfloat scale){
+static void displayText(GLfloat x, GLfloat y, GLfloat z, const std::string& text, GLfloat scale){
     glPushMatrix();
             glDisable(GL_LIGHTING);
             glEnable(GL_BLEND);
@@ -1485,7 +1482,7 @@ static void DecTest() {
     std::cout << "X i Y skalirani: " << matrixSizeX << ", " << matrixSizeY << "\n";
 }
 
-static void greska(const char* text) {
+static void greska(const std::string& text) {
     std::cerr << text << "\n";
     exit(1);
 }
