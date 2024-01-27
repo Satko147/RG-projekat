@@ -270,44 +270,34 @@ static void on_reshape(int width, int height) {
 }
 
 static void on_display() {
-	frameCount++;
-	std::cout << frameCount << std::endl;
+	// frameCount++;
+	// std::cout << frameCount << std::endl;
 
 	/* Brise se prethodni sadrzaj prozora. */
-	std::cout << "Clear buffer" << std::endl;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	/* Podesava se viewport. */
-	std::cout << "Set viewport" << std::endl;
 	glViewport(0, 0, window_width, window_height);
 
 	/* Podesava se projekcija. */
-	std::cout << "Set projection" << std::endl;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(50, window_width / window_height, 1, 1000);
 
 	/* Podesava se vidna tacka. */
-	std::cout << "Set viewport" << std::endl;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	std::cout << "Set camera angle" << std::endl;
 	gluLookAt(0, (matrixSizeX + matrixSizeY) / 0.8, (matrixSizeX + matrixSizeY) / 2.8, 0, 0, 0, 0, 1, 0);
 
-	std::cout << "Set light" << std::endl;
 	std::array<GLfloat, 4> light_position = {0, 30, 0, 1};
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
 
 	/*Iscrtavanje terena*/
-	std::cout << "Draw terrain" << std::endl;
-	std::cout << "Dec plane" << std::endl;
 	DecPlane(0.1, 0.1, 0.1);
-	std::cout << "Floor matrix" << std::endl;
 	DecFloorMatrix(0.9, 0.9, 0.9, 2);
 
 	/*Ispis trenutnog rezultata i zivota*/
-	std::cout << "Display score" << std::endl;
 	displayScore();
 
 	/*Ako igrac ostane bez helta, scena se pauzira i program se gasi posle
@@ -320,7 +310,6 @@ static void on_display() {
 	/*Inace sve ide normalno*/
 
 	/*Cekamo 3 sekunde pre nego sto krenemo da spawnujemo protivnike*/
-	std::cout << "Wait 3 sec for enemies" << std::endl;
 	glutTimerFunc(TIMER_INITIAL, on_timerInitial, TIMER_INITIAL_ID_1);
 	displayInitialCountdown();
 
@@ -356,13 +345,11 @@ static void on_display() {
 	}
 
 	/*Funkcija za kretanje*/
-	std::cout << "Movement" << std::endl;
 	if (movementEnabled) {
 		characterMovement();
 	}
 
 	/*gluProject*/
-	std::cout << "Project" << std::endl;
 	glGetDoublev(GL_MODELVIEW_MATRIX, ModelMatrix.data());
 	if (notSetP) {
 		glGetDoublev(GL_PROJECTION_MATRIX, ProjectionMatrix.data());
@@ -425,12 +412,10 @@ static void on_display() {
 	}
 
 	/*Pomeranje i rotacija igraca*/
-	std::cout << "Update player pos and rot" << std::endl;
 	glTranslatef(moveVec[0], 1, moveVec[2]);
 	glRotatef(atan2(currentRotationX, currentRotationY) * (-180) / M_PI, 0, 1, 0);
 
 	/*Character main*/
-	std::cout << "Draw main character" << std::endl;
 	std::array<GLfloat, 1> low_shininess = {100};
 	std::array<GLfloat, 4> material_ambient = {.3, .3, .3, 1};
 	std::array<GLfloat, 4> material_diffuse = {.8, .8, .7, 1};
@@ -1490,7 +1475,6 @@ static void DecLevelInit() {
 	for (int i = 0; i != matrixSizeX; i++) {
 		for (int j = 0; j != matrixSizeY; j++) {
 			/*Nasumicno generisanje prepreka*/
-			std::cout << "Filling M_O" << std::endl;
 			r = (float)rand() / (float)RAND_MAX;
 			if (r <= obstacleChance) {
 				M[i][j] = 1;
@@ -1554,21 +1538,16 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 	material_diffuse_and_ambient_clear[2] = 0.15;
 	material_diffuse_and_ambient_clear[3] = 1;
 
-	std::cout << "M_Obstacle: " << M_Obstacle[0][0] << std::endl;
-
 	for (int i = 0; i != matrixSizeX; i++) {
-		std::cout << "Outer: " << i << std::endl;
 		glMaterialfv(GL_FRONT, GL_AMBIENT, material_diffuse_and_ambient_clear.data());
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse_and_ambient_clear.data());
 		glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular.data());
 		glMaterialfv(GL_FRONT, GL_SHININESS, medium_shininess.data());
 		xPos = i - (matrixSizeX / 2);
 		for (int j = 0; j != matrixSizeY; j++) {
-			std::cout << "Inner: " << j << std::endl;
 			yPos = j - (matrixSizeY / 2);
 			color = 0.55 - j * 0.03;
 			if (M[i][j] == 0) {
-				std::cout << "If" << std::endl;
 				glPushMatrix();
 				glTranslatef(xPos * 2, 0.5, yPos * 2);
 				//                     glColor3f(0.88, 0.88, 0.9);
@@ -1576,9 +1555,7 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 				glutSolidCube(1);
 				glPopMatrix();
 			} else if (M[i][j] == 1) {
-				std::cout << "Else If" << std::endl;
 				localCubeHeight = cubeHeight + M_Obstacle[i][j];
-				std::cout << "aa" << std::endl;
 
 				material_diffuse_and_ambient_obstacle[0] = color;
 				material_diffuse_and_ambient_obstacle[1] = color;
