@@ -72,11 +72,11 @@ static bool notSetP = true;
 static int characterHealth = 20;
 static int characterHit = 0;
 static const float characterDiameter = 0.6;
-static std::array<float, 3> movementVector = {0.0f, 0.0f, 0.0f};
+static std::array<float, 3> moveVec = {0.0f, 0.0f, 0.0f};
 static float movementSpeed = 0.1;
 static float diagonalMovementMultiplier = 0.707107;
-static int curWorldX, curWorldY; // Trenutna pozicija lika u worldspace-u.
-static int curMatX, curMatY;     // Trenutna pozicija lika u matrici.
+static int curWorldX, curWorldY;           // Trenutna pozicija lika u worldspace-u.
+static int curMatX, curMatY;               // Trenutna pozicija lika u matrici.
 static GLdouble objWinX, objWinY, objWinZ; // Trenutna pozicija lika na ekranu.
 static int currentRotationX, currentRotationY;
 
@@ -85,8 +85,7 @@ static bool gameMode = GAME_MODE;
 static bool fullScr = false;
 static void displayInitialCountdown();
 static void displayScore();
-static void displayText(GLfloat x, GLfloat y, GLfloat z,
-                        const std::string &text, GLfloat scale);
+static void displayText(GLfloat x, GLfloat y, GLfloat z, const std::string &text, GLfloat scale);
 static void output(GLfloat x, GLfloat y, const std::string &text);
 static void greska(const std::string &text);
 static void DecLevelInit();
@@ -143,7 +142,7 @@ typedef struct {
 	float currentY;
 	float currentZ;
 	bool bulletSet;
-	bool getMovementVector;
+	bool getmoveVec;
 	float bulletVelocity;
 } bullet;
 static std::array<bullet, MAX_BULLETS_ON_SCREEN> bullets;
@@ -283,8 +282,8 @@ static void on_display() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	gluLookAt(0, (matrixSizeX + matrixSizeY) / 0.8,
-	          (matrixSizeX + matrixSizeY) / 2.8, 0, 0, 0, 0, 1, 0);
+	gluLookAt(0, (matrixSizeX + matrixSizeY) / 0.8, (matrixSizeX + matrixSizeY) / 2.8, 0, 0, 0, 0,
+	          1, 0);
 
 	std::array<GLfloat, 4> light_position = {0, 30, 0, 1};
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
@@ -321,8 +320,7 @@ static void on_display() {
 
 		for (int i = 0; i != currentEnemyNumber; i++) {
 			if (enemies[i].alive) {
-				if (checkBulletColision(enemies[i].x, enemies[i].y,
-				                        COLISION_ENEMY)) {
+				if (checkBulletColision(enemies[i].x, enemies[i].y, COLISION_ENEMY)) {
 					enemies[i].health -= bulletDmg;
 					if (enemies[i].health <= 0) {
 						enemies[i].alive = false;
@@ -355,8 +353,7 @@ static void on_display() {
 	glGetIntegerv(GL_VIEWPORT, ViewportMatrix.data());
 
 	/*Nalazimo koordiante naseg lika u koordinatama ekrana*/
-	gluProject(movementVector[0], movementVector[1], movementVector[2],
-	           ModelMatrix.data(), ProjectionMatrix.data(),
+	gluProject(moveVec[0], moveVec[1], moveVec[2], ModelMatrix.data(), ProjectionMatrix.data(),
 	           ViewportMatrix.data(), &objWinX, &objWinY, &objWinZ);
 
 	/*Racunanje rotacije*/
@@ -375,40 +372,33 @@ static void on_display() {
 			if (bullets[i].bulletSet) {
 				bullets[i].bulletVelocity += bulletSpeed;
 
-				if (bullets[i].getMovementVector) {
-					bullets[i].bulletStartingPoint[0] = movementVector[0];
+				if (bullets[i].getmoveVec) {
+					bullets[i].bulletStartingPoint[0] = moveVec[0];
 					bullets[i].bulletStartingPoint[1] = 1.0;
-					bullets[i].bulletStartingPoint[2] = movementVector[2];
+					bullets[i].bulletStartingPoint[2] = moveVec[2];
 
-					bullets[i].bulletTrajLength =
-					    (float)sqrt(currentRotationX * currentRotationX +
-					                currentRotationY * currentRotationY);
-					bullets[i].bulletTrajNorm[0] =
-					    currentRotationX / bullets[i].bulletTrajLength;
-					bullets[i].bulletTrajNorm[1] =
-					    -currentRotationY / bullets[i].bulletTrajLength;
-					bullets[i].getMovementVector = false;
+					bullets[i].bulletTrajLength = (float)sqrt(currentRotationX * currentRotationX +
+					                                          currentRotationY * currentRotationY);
+					bullets[i].bulletTrajNorm[0] = currentRotationX / bullets[i].bulletTrajLength;
+					bullets[i].bulletTrajNorm[1] = -currentRotationY / bullets[i].bulletTrajLength;
+					bullets[i].getmoveVec = false;
 				}
 
-				bullets[i].currentX =
-				    bullets[i].bulletStartingPoint[0] +
-				    bullets[i].bulletVelocity * bullets[i].bulletTrajNorm[0];
+				bullets[i].currentX = bullets[i].bulletStartingPoint[0] +
+				                      bullets[i].bulletVelocity * bullets[i].bulletTrajNorm[0];
 				bullets[i].currentY = bullets[i].bulletStartingPoint[1];
-				bullets[i].currentZ =
-				    bullets[i].bulletStartingPoint[2] +
-				    bullets[i].bulletVelocity * bullets[i].bulletTrajNorm[1];
+				bullets[i].currentZ = bullets[i].bulletStartingPoint[2] +
+				                      bullets[i].bulletVelocity * bullets[i].bulletTrajNorm[1];
 
 				glPushMatrix();
-				glTranslatef(bullets[i].currentX, bullets[i].currentY,
-				             bullets[i].currentZ);
+				glTranslatef(bullets[i].currentX, bullets[i].currentY, bullets[i].currentZ);
 				glDisable(GL_LIGHTING);
 				glColor3f(0, 0, 0);
 				glutSolidSphere(0.2, 5, 5);
 				glEnable(GL_LIGHTING);
 				glPopMatrix();
 				if (bullets[i].bulletVelocity >= maxBulletVelocity ||
-				    checkBulletColision(bullets[i].currentX,
-				                        bullets[i].currentZ,
+				    checkBulletColision(bullets[i].currentX, bullets[i].currentZ,
 				                        COLISION_TERRAIN)) {
 					bullets[i].bulletSet = false;
 					bullets[i].bulletVelocity = 1.0;
@@ -418,9 +408,8 @@ static void on_display() {
 	}
 
 	/*Pomeranje i rotacija igraca*/
-	glTranslatef(movementVector[0], 1, movementVector[2]);
-	glRotatef(atan2(currentRotationX, currentRotationY) * (-180) / M_PI, 0, 1,
-	          0);
+	glTranslatef(moveVec[0], 1, moveVec[2]);
+	glRotatef(atan2(currentRotationX, currentRotationY) * (-180) / M_PI, 0, 1, 0);
 
 	/*Character main*/
 	std::array<GLfloat, 1> low_shininess = {100};
@@ -440,8 +429,7 @@ static void on_display() {
 	glPushMatrix();
 	glTranslatef(0, 1.05, 0);
 	glRotatef(90, 1, 0, 0);
-	gluCylinder(gluNewQuadric(), characterDiameter, characterDiameter, 1, 20,
-	            1);
+	gluCylinder(gluNewQuadric(), characterDiameter, characterDiameter, 1, 20, 1);
 	glPopMatrix();
 	/*Donja lopta*/
 	glPushMatrix();
@@ -464,8 +452,7 @@ static void on_display() {
 	glutSwapBuffers();
 }
 
-//------------------------C A L L B A C K   T A S T A T U R
-// E-----------------------------
+//------------------------C A L L B A C K   T A S T A T U R E-----------------------------
 static void on_keyPress(unsigned char key, int x, int y) {
 	switch (key) {
 
@@ -545,31 +532,29 @@ static void on_keyRelease(unsigned char key, int x, int y) {
 	}
 }
 
-//------------------------F U N K C I J E   K R E T A N J
-// A-------------------------
-static void moveLeft() { movementVector[0] -= movementSpeed; }
-static void moveRight() { movementVector[0] += movementSpeed; }
-static void moveUp() { movementVector[2] -= movementSpeed; }
-static void moveDown() { movementVector[2] += movementSpeed; }
+//------------------------F U N K C I J E   K R E T A N J A-------------------------
+static void moveLeft() { moveVec[0] -= movementSpeed; }
+static void moveRight() { moveVec[0] += movementSpeed; }
+static void moveUp() { moveVec[2] -= movementSpeed; }
+static void moveDown() { moveVec[2] += movementSpeed; }
 static void moveUpLeft() {
-	movementVector[2] -= movementSpeed * diagonalMovementMultiplier;
-	movementVector[0] -= movementSpeed * diagonalMovementMultiplier;
+	moveVec[2] -= movementSpeed * diagonalMovementMultiplier;
+	moveVec[0] -= movementSpeed * diagonalMovementMultiplier;
 }
 static void moveUpRight() {
-	movementVector[2] -= movementSpeed * diagonalMovementMultiplier;
-	movementVector[0] += movementSpeed * diagonalMovementMultiplier;
+	moveVec[2] -= movementSpeed * diagonalMovementMultiplier;
+	moveVec[0] += movementSpeed * diagonalMovementMultiplier;
 }
 static void moveDownLeft() {
-	movementVector[2] += movementSpeed * diagonalMovementMultiplier;
-	movementVector[0] -= movementSpeed * diagonalMovementMultiplier;
+	moveVec[2] += movementSpeed * diagonalMovementMultiplier;
+	moveVec[0] -= movementSpeed * diagonalMovementMultiplier;
 }
 static void moveDownRight() {
-	movementVector[2] += movementSpeed * diagonalMovementMultiplier;
-	movementVector[0] += movementSpeed * diagonalMovementMultiplier;
+	moveVec[2] += movementSpeed * diagonalMovementMultiplier;
+	moveVec[0] += movementSpeed * diagonalMovementMultiplier;
 }
 
-//-------------------------K O N T R O L A   K R E T A N J
-// A-------------------------
+//-------------------------K O N T R O L A   K R E T A N J A-------------------------
 /*Ovde ima puno koda, pokriva svaki slucaj kolizije glavnog lika i terena, radi
   bez obzira na dimenzije terena. Uzima u obzir precnik lika i ima posebne
   provere za odnos pozicija lika sa preprekama za dijagonalno i pravolinijsko
@@ -579,7 +564,7 @@ void characterMovement() {
 
 	/*Racunanje koordinata polja u kojem se nalazimo u prostoru:*/
 	/*Za X osu*/
-	curWorldX = (int)movementVector[0];
+	curWorldX = (int)moveVec[0];
 	if (curWorldX < 0) {
 		if (curWorldX % 2 != 0) {
 			curWorldX -= 1;
@@ -589,7 +574,7 @@ void characterMovement() {
 	}
 
 	/*Za Y osu*/
-	curWorldY = (int)movementVector[2];
+	curWorldY = (int)moveVec[2];
 	if (curWorldY < 0) {
 		if (curWorldY % 2 != 0) {
 			curWorldY -= 1;
@@ -609,11 +594,11 @@ void characterMovement() {
 	int wa, wd;
 	float localX, localY;
 
-	localX = fmod(movementVector[0] + 1.0, 2);
+	localX = fmod(moveVec[0] + 1.0, 2);
 	if (localX < 0.0) {
 		localX = 2.0 + localX;
 	}
-	localY = fmod((1.0 - movementVector[2]), 2);
+	localY = fmod((1.0 - moveVec[2]), 2);
 	if (localY < 0.0) {
 		localY = 2.0 + localY;
 	}
@@ -631,16 +616,16 @@ void characterMovement() {
 	}
 
 	//------------detekcija kolizije za ivice terena------------------
-	if (movementVector[2] < (-1) * (matrixSizeY - 1)) {
+	if (moveVec[2] < (-1) * (matrixSizeY - 1)) {
 		keyBuffer[119] = false;
 	}
-	if (movementVector[0] < (-1) * (matrixSizeX - 1)) {
+	if (moveVec[0] < (-1) * (matrixSizeX - 1)) {
 		keyBuffer[97] = false;
 	}
-	if (movementVector[0] > (matrixSizeX - 1)) {
+	if (moveVec[0] > (matrixSizeX - 1)) {
 		keyBuffer[100] = false;
 	}
-	if (movementVector[2] > matrixSizeY - 1) {
+	if (moveVec[2] > matrixSizeY - 1) {
 		keyBuffer[115] = false;
 	}
 
@@ -649,36 +634,34 @@ void characterMovement() {
 	if (keyBuffer[119] && keyBuffer[97]) {
 		if (curMatX - 1 >= 0 && curMatY - 1 >= 0) {
 			if (M[curMatX - 1][curMatY] == 1) {
-				if ((M[curMatX][curMatY - 1] == 1 &&
-				     M[curMatX - 1][curMatY - 1] == 1) ||
-				    (M[curMatX][curMatY - 1] == 1 &&
-				     M[curMatX - 1][curMatY - 1] == 0)) {
-					if (movementVector[0] > curWorldX - colisionRange &&
-					    movementVector[2] > curWorldY - colisionRange) {
+				if ((M[curMatX][curMatY - 1] == 1 && M[curMatX - 1][curMatY - 1] == 1) ||
+				    (M[curMatX][curMatY - 1] == 1 && M[curMatX - 1][curMatY - 1] == 0)) {
+					if (moveVec[0] > curWorldX - colisionRange &&
+					    moveVec[2] > curWorldY - colisionRange) {
 						moveUpLeft();
-					} else if (movementVector[0] <= curWorldX - colisionRange &&
-					           movementVector[2] > curWorldY - colisionRange) {
+					} else if (moveVec[0] <= curWorldX - colisionRange &&
+					           moveVec[2] > curWorldY - colisionRange) {
 						moveUp();
-					} else if (movementVector[0] > curWorldX - colisionRange &&
-					           movementVector[2] <= curWorldY - colisionRange) {
+					} else if (moveVec[0] > curWorldX - colisionRange &&
+					           moveVec[2] <= curWorldY - colisionRange) {
 						moveLeft();
 					}
 				} else {
-					if (movementVector[0] > curWorldX - colisionRange) {
+					if (moveVec[0] > curWorldX - colisionRange) {
 						moveUpLeft();
 					} else {
 						moveUp();
 					}
 				}
 			} else if (M[curMatX][curMatY - 1] == 1) {
-				if (movementVector[2] > curWorldY - colisionRange) {
+				if (moveVec[2] > curWorldY - colisionRange) {
 					moveUpLeft();
 				} else {
 					moveLeft();
 				}
 			} else if (M[curMatX - 1][curMatY - 1] == 1) {
-				if (!(movementVector[0] < curWorldX - colisionRange &&
-				      movementVector[2] < curWorldY - colisionRange)) {
+				if (!(moveVec[0] < curWorldX - colisionRange &&
+				      moveVec[2] < curWorldY - colisionRange)) {
 					moveUpLeft();
 				} else {
 					if (wa == 1) {
@@ -693,7 +676,7 @@ void characterMovement() {
 		} else {
 			if (curMatX - 1 < 0) {
 				if (M[curMatX][curMatY - 1] == 1) {
-					if (movementVector[2] > curWorldY - colisionRange) {
+					if (moveVec[2] > curWorldY - colisionRange) {
 						moveUpLeft();
 					} else {
 						moveLeft();
@@ -703,7 +686,7 @@ void characterMovement() {
 				}
 			} else if (curMatY - 1 < 0) {
 				if (M[curMatX - 1][curMatY] == 1) {
-					if (movementVector[0] > curWorldX - colisionRange) {
+					if (moveVec[0] > curWorldX - colisionRange) {
 						moveUpLeft();
 					} else {
 						moveUp();
@@ -720,37 +703,35 @@ void characterMovement() {
 	else if (keyBuffer[119] && keyBuffer[100]) {
 		if (curMatX + 1 < matrixSizeX && curMatY - 1 >= 0) {
 			if (M[curMatX + 1][curMatY] == 1) {
-				if ((M[curMatX][curMatY - 1] == 1 &&
-				     M[curMatX + 1][curMatY - 1] == 1) ||
-				    (M[curMatX][curMatY - 1] == 1 &&
-				     M[curMatX + 1][curMatY - 1] == 0)) {
-					if (movementVector[0] < curWorldX + colisionRange &&
-					    movementVector[2] > curWorldY - colisionRange) {
+				if ((M[curMatX][curMatY - 1] == 1 && M[curMatX + 1][curMatY - 1] == 1) ||
+				    (M[curMatX][curMatY - 1] == 1 && M[curMatX + 1][curMatY - 1] == 0)) {
+					if (moveVec[0] < curWorldX + colisionRange &&
+					    moveVec[2] > curWorldY - colisionRange) {
 						moveUpRight();
-					} else if (movementVector[0] >= curWorldX + colisionRange &&
-					           movementVector[2] > curWorldY - colisionRange) {
+					} else if (moveVec[0] >= curWorldX + colisionRange &&
+					           moveVec[2] > curWorldY - colisionRange) {
 						moveUp();
-					} else if (movementVector[0] < curWorldX + colisionRange &&
-					           movementVector[2] <= curWorldY - colisionRange) {
+					} else if (moveVec[0] < curWorldX + colisionRange &&
+					           moveVec[2] <= curWorldY - colisionRange) {
 						moveRight();
 					}
 				} else {
-					if (movementVector[0] < curWorldX + colisionRange) {
+					if (moveVec[0] < curWorldX + colisionRange) {
 						moveUpRight();
 					} else {
 						moveUp();
 					}
 				}
 			} else if (M[curMatX][curMatY - 1] == 1) {
-				if (movementVector[2] > curWorldY - colisionRange) {
+				if (moveVec[2] > curWorldY - colisionRange) {
 					moveUpRight();
 				} else {
 					moveRight();
 				}
 			} else if (M[curMatX + 1][curMatY - 1] == 1) {
 
-				if (!(movementVector[0] > curWorldX + colisionRange &&
-				      movementVector[2] < curWorldY - colisionRange)) {
+				if (!(moveVec[0] > curWorldX + colisionRange &&
+				      moveVec[2] < curWorldY - colisionRange)) {
 					moveUpRight();
 				} else {
 					if (wd == 1) {
@@ -765,7 +746,7 @@ void characterMovement() {
 		} else {
 			if (curMatX + 1 >= matrixSizeX) {
 				if (M[curMatX][curMatY - 1] == 1) {
-					if (movementVector[2] > curWorldY - colisionRange) {
+					if (moveVec[2] > curWorldY - colisionRange) {
 						moveUpRight();
 					} else {
 						moveRight();
@@ -775,7 +756,7 @@ void characterMovement() {
 				}
 			} else if (curMatY - 1 < 0) {
 				if (M[curMatX + 1][curMatY] == 1) {
-					if (movementVector[0] < curWorldX + colisionRange) {
+					if (moveVec[0] < curWorldX + colisionRange) {
 						moveUpRight();
 					} else {
 						moveUp();
@@ -793,36 +774,34 @@ void characterMovement() {
 	else if (keyBuffer[115] && keyBuffer[97]) {
 		if (curMatX - 1 >= 0 && curMatY + 1 < matrixSizeY) {
 			if (M[curMatX - 1][curMatY] == 1) {
-				if ((M[curMatX][curMatY + 1] == 1 &&
-				     M[curMatX - 1][curMatY + 1] == 1) ||
-				    (M[curMatX][curMatY + 1] == 1 &&
-				     M[curMatX - 1][curMatY + 1] == 0)) {
-					if (movementVector[0] > curWorldX - colisionRange &&
-					    movementVector[2] < curWorldY + colisionRange) {
+				if ((M[curMatX][curMatY + 1] == 1 && M[curMatX - 1][curMatY + 1] == 1) ||
+				    (M[curMatX][curMatY + 1] == 1 && M[curMatX - 1][curMatY + 1] == 0)) {
+					if (moveVec[0] > curWorldX - colisionRange &&
+					    moveVec[2] < curWorldY + colisionRange) {
 						moveDownLeft();
-					} else if (movementVector[0] <= curWorldX - colisionRange &&
-					           movementVector[2] < curWorldY + colisionRange) {
+					} else if (moveVec[0] <= curWorldX - colisionRange &&
+					           moveVec[2] < curWorldY + colisionRange) {
 						moveDown();
-					} else if (movementVector[0] > curWorldX - colisionRange &&
-					           movementVector[2] >= curWorldY - colisionRange) {
+					} else if (moveVec[0] > curWorldX - colisionRange &&
+					           moveVec[2] >= curWorldY - colisionRange) {
 						moveLeft();
 					}
 				} else {
-					if (movementVector[0] > curWorldX - colisionRange) {
+					if (moveVec[0] > curWorldX - colisionRange) {
 						moveDownLeft();
 					} else {
 						moveDown();
 					}
 				}
 			} else if (M[curMatX][curMatY + 1] == 1) {
-				if (movementVector[2] < curWorldY + colisionRange) {
+				if (moveVec[2] < curWorldY + colisionRange) {
 					moveDownLeft();
 				} else {
 					moveLeft();
 				}
 			} else if (M[curMatX - 1][curMatY + 1] == 1) {
-				if (!(movementVector[0] < curWorldX - colisionRange &&
-				      movementVector[2] > curWorldY + colisionRange)) {
+				if (!(moveVec[0] < curWorldX - colisionRange &&
+				      moveVec[2] > curWorldY + colisionRange)) {
 					moveDownLeft();
 				} else {
 					if (wd == 0) {
@@ -839,7 +818,7 @@ void characterMovement() {
 				moveDownLeft();
 			} else if (curMatY + 1 >= matrixSizeY) {
 				if (M[curMatX - 1][curMatY] == 1) {
-					if (movementVector[0] > curWorldX - colisionRange) {
+					if (moveVec[0] > curWorldX - colisionRange) {
 						moveDownLeft();
 					} else {
 						moveDown();
@@ -849,7 +828,7 @@ void characterMovement() {
 				}
 			} else if (curMatX - 1 < 0) {
 				if (M[curMatX][curMatY + 1] == 1) {
-					if (movementVector[2] < curWorldY + colisionRange) {
+					if (moveVec[2] < curWorldY + colisionRange) {
 						moveDownLeft();
 					} else {
 						moveLeft();
@@ -866,37 +845,35 @@ void characterMovement() {
 	else if (keyBuffer[115] && keyBuffer[100]) {
 		if (curMatX + 1 < matrixSizeX && curMatY + 1 < matrixSizeY) {
 			if (M[curMatX + 1][curMatY] == 1) {
-				if ((M[curMatX][curMatY + 1] == 1 &&
-				     M[curMatX + 1][curMatY + 1] == 1) ||
-				    (M[curMatX][curMatY + 1] == 1 &&
-				     M[curMatX + 1][curMatY + 1] == 0)) {
-					if (movementVector[0] < curWorldX + colisionRange &&
-					    movementVector[2] < curWorldY + colisionRange) {
+				if ((M[curMatX][curMatY + 1] == 1 && M[curMatX + 1][curMatY + 1] == 1) ||
+				    (M[curMatX][curMatY + 1] == 1 && M[curMatX + 1][curMatY + 1] == 0)) {
+					if (moveVec[0] < curWorldX + colisionRange &&
+					    moveVec[2] < curWorldY + colisionRange) {
 						moveDownRight();
-					} else if (movementVector[0] >= curWorldX + colisionRange &&
-					           movementVector[2] < curWorldY + colisionRange) {
+					} else if (moveVec[0] >= curWorldX + colisionRange &&
+					           moveVec[2] < curWorldY + colisionRange) {
 						moveDown();
-					} else if (movementVector[0] < curWorldX + colisionRange &&
-					           movementVector[2] >= curWorldY - colisionRange) {
+					} else if (moveVec[0] < curWorldX + colisionRange &&
+					           moveVec[2] >= curWorldY - colisionRange) {
 						moveRight();
 					}
 				} else {
-					if (movementVector[0] < curWorldX + colisionRange) {
+					if (moveVec[0] < curWorldX + colisionRange) {
 						moveDownRight();
 					} else {
 						moveDown();
 					}
 				}
 			} else if (M[curMatX][curMatY + 1] == 1) {
-				if (movementVector[2] < curWorldY + colisionRange) {
+				if (moveVec[2] < curWorldY + colisionRange) {
 					moveDownRight();
 				} else {
 					moveRight();
 				}
 			} else if (M[curMatX + 1][curMatY + 1] == 1) {
 
-				if (!(movementVector[0] > curWorldX + colisionRange &&
-				      movementVector[2] > curWorldY + colisionRange)) {
+				if (!(moveVec[0] > curWorldX + colisionRange &&
+				      moveVec[2] > curWorldY + colisionRange)) {
 					moveDownRight();
 				} else {
 					if (wa == 0) {
@@ -913,7 +890,7 @@ void characterMovement() {
 				moveDownRight();
 			} else if (curMatY + 1 >= matrixSizeY) {
 				if (M[curMatX + 1][curMatY] == 1) {
-					if (movementVector[0] < curWorldX + colisionRange) {
+					if (moveVec[0] < curWorldX + colisionRange) {
 						moveDownRight();
 					} else {
 						moveDown();
@@ -923,7 +900,7 @@ void characterMovement() {
 				}
 			} else if (curMatX + 1 >= matrixSizeX) {
 				if (M[curMatX][curMatY + 1] == 1) {
-					if (movementVector[2] < curWorldY + colisionRange) {
+					if (moveVec[2] < curWorldY + colisionRange) {
 						moveDownRight();
 					} else {
 						moveRight();
@@ -943,52 +920,46 @@ void characterMovement() {
 			if (curMatY - 1 >= 0) {
 				if (curMatX - 1 >= 0 && curMatX + 1 < matrixSizeX) {
 					if (M[curMatX][curMatY - 1] == 1) {
-						if (movementVector[2] > curWorldY - colisionRange) {
+						if (moveVec[2] > curWorldY - colisionRange) {
 							moveUp();
 						}
 					} else if (M[curMatX - 1][curMatY - 1] == 1 &&
 					           M[curMatX + 1][curMatY - 1] == 1) {
-						if (movementVector[2] > curWorldY - colisionRange) {
+						if (moveVec[2] > curWorldY - colisionRange) {
 							moveUp();
-						} else if (movementVector[0] >
-						               curWorldX - colisionRange + 0.15 &&
-						           movementVector[0] <
-						               curWorldX + colisionRange + 0.15) {
+						} else if (moveVec[0] > curWorldX - colisionRange + 0.15 &&
+						           moveVec[0] < curWorldX + colisionRange + 0.15) {
 							moveUp();
 						}
 					} else if (M[curMatX - 1][curMatY - 1] == 1) {
-						if (movementVector[2] > curWorldY - colisionRange) {
+						if (moveVec[2] > curWorldY - colisionRange) {
 							moveUp();
-						} else if (movementVector[0] >
-						           curWorldX - colisionRange + 0.15) {
+						} else if (moveVec[0] > curWorldX - colisionRange + 0.15) {
 							moveUp();
 						}
 					} else if (M[curMatX + 1][curMatY - 1] == 1) {
-						if (movementVector[2] > curWorldY - colisionRange) {
+						if (moveVec[2] > curWorldY - colisionRange) {
 							moveUp();
-						} else if (movementVector[0] <
-						           curWorldX + colisionRange + 0.15) {
+						} else if (moveVec[0] < curWorldX + colisionRange + 0.15) {
 							moveUp();
 						}
 					} else if (M[curMatX - 1][curMatY] == 1) {
-						if (movementVector[2] > curWorldY - colisionRange) {
+						if (moveVec[2] > curWorldY - colisionRange) {
 							moveUp();
-						} else if (movementVector[0] >
-						           curWorldX - colisionRange + 0.15) {
+						} else if (moveVec[0] > curWorldX - colisionRange + 0.15) {
 							moveUp();
 						}
 					} else if (M[curMatX + 1][curMatY] == 1) {
-						if (movementVector[2] > curWorldY - colisionRange) {
+						if (moveVec[2] > curWorldY - colisionRange) {
 							moveUp();
-						} else if (movementVector[0] <
-						           curWorldX + colisionRange + 0.15) {
+						} else if (moveVec[0] < curWorldX + colisionRange + 0.15) {
 							moveUp();
 						}
 					} else {
 						moveUp();
 					}
 				} else if (M[curMatX][curMatY - 1] == 1) {
-					if (movementVector[2] > curWorldY - colisionRange) {
+					if (moveVec[2] > curWorldY - colisionRange) {
 						moveUp();
 					}
 				} else {
@@ -1003,52 +974,46 @@ void characterMovement() {
 			if (curMatX - 1 >= 0) {
 				if (curMatY - 1 >= 0 && curMatY + 1 < matrixSizeY) {
 					if (M[curMatX - 1][curMatY] == 1) {
-						if (movementVector[0] > curWorldX - colisionRange) {
+						if (moveVec[0] > curWorldX - colisionRange) {
 							moveLeft();
 						}
 					} else if (M[curMatX - 1][curMatY - 1] == 1 &&
 					           M[curMatX - 1][curMatY + 1] == 1) {
-						if (movementVector[0] > curWorldX - colisionRange) {
+						if (moveVec[0] > curWorldX - colisionRange) {
 							moveLeft();
-						} else if (movementVector[2] >
-						               curWorldY - colisionRange + 0.15 &&
-						           movementVector[2] <
-						               curWorldY + colisionRange + 0.15) {
+						} else if (moveVec[2] > curWorldY - colisionRange + 0.15 &&
+						           moveVec[2] < curWorldY + colisionRange + 0.15) {
 							moveLeft();
 						}
 					} else if (M[curMatX - 1][curMatY - 1] == 1) {
-						if (movementVector[0] > curWorldX - colisionRange) {
+						if (moveVec[0] > curWorldX - colisionRange) {
 							moveLeft();
-						} else if (movementVector[2] >
-						           curWorldY - colisionRange + 0.15) {
+						} else if (moveVec[2] > curWorldY - colisionRange + 0.15) {
 							moveLeft();
 						}
 					} else if (M[curMatX - 1][curMatY + 1] == 1) {
-						if (movementVector[0] > curWorldX - colisionRange) {
+						if (moveVec[0] > curWorldX - colisionRange) {
 							moveLeft();
-						} else if (movementVector[2] <
-						           curWorldY + colisionRange + 0.15) {
+						} else if (moveVec[2] < curWorldY + colisionRange + 0.15) {
 							moveLeft();
 						}
 					} else if (M[curMatX][curMatY - 1] == 1) {
-						if (movementVector[0] > curWorldX - colisionRange) {
+						if (moveVec[0] > curWorldX - colisionRange) {
 							moveLeft();
-						} else if (movementVector[2] >
-						           curWorldY - colisionRange + 0.15) {
+						} else if (moveVec[2] > curWorldY - colisionRange + 0.15) {
 							moveLeft();
 						}
 					} else if (M[curMatX][curMatY + 1] == 1) {
-						if (movementVector[0] > curWorldX - colisionRange) {
+						if (moveVec[0] > curWorldX - colisionRange) {
 							moveLeft();
-						} else if (movementVector[2] <
-						           curWorldY + colisionRange + 0.15) {
+						} else if (moveVec[2] < curWorldY + colisionRange + 0.15) {
 							moveLeft();
 						}
 					} else {
 						moveLeft();
 					}
 				} else if (M[curMatX - 1][curMatY] == 1) {
-					if (movementVector[0] > curWorldX - colisionRange) {
+					if (moveVec[0] > curWorldX - colisionRange) {
 						moveLeft();
 					}
 				} else {
@@ -1063,52 +1028,46 @@ void characterMovement() {
 			if (curMatY + 1 < matrixSizeY) {
 				if (curMatX - 1 >= 0 && curMatX + 1 < matrixSizeX) {
 					if (M[curMatX][curMatY + 1] == 1) {
-						if (movementVector[2] < curWorldY + colisionRange) {
+						if (moveVec[2] < curWorldY + colisionRange) {
 							moveDown();
 						}
 					} else if (M[curMatX - 1][curMatY + 1] == 1 &&
 					           M[curMatX + 1][curMatY + 1] == 1) {
-						if (movementVector[2] < curWorldY + colisionRange) {
+						if (moveVec[2] < curWorldY + colisionRange) {
 							moveDown();
-						} else if (movementVector[0] >
-						               curWorldX - colisionRange + 0.15 &&
-						           movementVector[0] <
-						               curWorldX + colisionRange + 0.15) {
+						} else if (moveVec[0] > curWorldX - colisionRange + 0.15 &&
+						           moveVec[0] < curWorldX + colisionRange + 0.15) {
 							moveDown();
 						}
 					} else if (M[curMatX - 1][curMatY + 1] == 1) {
-						if (movementVector[2] < curWorldY + colisionRange) {
+						if (moveVec[2] < curWorldY + colisionRange) {
 							moveDown();
-						} else if (movementVector[0] >
-						           curWorldX - colisionRange + 0.15) {
+						} else if (moveVec[0] > curWorldX - colisionRange + 0.15) {
 							moveDown();
 						}
 					} else if (M[curMatX + 1][curMatY + 1] == 1) {
-						if (movementVector[2] < curWorldY + colisionRange) {
+						if (moveVec[2] < curWorldY + colisionRange) {
 							moveDown();
-						} else if (movementVector[0] <
-						           curWorldX + colisionRange + 0.15) {
+						} else if (moveVec[0] < curWorldX + colisionRange + 0.15) {
 							moveDown();
 						}
 					} else if (M[curMatX - 1][curMatY] == 1) {
-						if (movementVector[2] < curWorldY + colisionRange) {
+						if (moveVec[2] < curWorldY + colisionRange) {
 							moveDown();
-						} else if (movementVector[0] >
-						           curWorldX - colisionRange + 0.15) {
+						} else if (moveVec[0] > curWorldX - colisionRange + 0.15) {
 							moveDown();
 						}
 					} else if (M[curMatX + 1][curMatY] == 1) {
-						if (movementVector[2] < curWorldY + colisionRange) {
+						if (moveVec[2] < curWorldY + colisionRange) {
 							moveDown();
-						} else if (movementVector[0] <
-						           curWorldX + colisionRange + 0.15) {
+						} else if (moveVec[0] < curWorldX + colisionRange + 0.15) {
 							moveDown();
 						}
 					} else {
 						moveDown();
 					}
 				} else if (M[curMatX][curMatY + 1] == 1) {
-					if (movementVector[2] < curWorldY + colisionRange) {
+					if (moveVec[2] < curWorldY + colisionRange) {
 						moveDown();
 					}
 				} else {
@@ -1123,52 +1082,46 @@ void characterMovement() {
 			if (curMatX + 1 < matrixSizeX) {
 				if (curMatY - 1 >= 0 && curMatY + 1 < matrixSizeY) {
 					if (M[curMatX + 1][curMatY] == 1) {
-						if (movementVector[0] < curWorldX + colisionRange) {
+						if (moveVec[0] < curWorldX + colisionRange) {
 							moveRight();
 						}
 					} else if (M[curMatX + 1][curMatY - 1] == 1 &&
 					           M[curMatX + 1][curMatY + 1] == 1) {
-						if (movementVector[0] < curWorldX + colisionRange) {
+						if (moveVec[0] < curWorldX + colisionRange) {
 							moveRight();
-						} else if (movementVector[2] >
-						               curWorldY - colisionRange + 0.15 &&
-						           movementVector[2] <
-						               curWorldY + colisionRange + 0.15) {
+						} else if (moveVec[2] > curWorldY - colisionRange + 0.15 &&
+						           moveVec[2] < curWorldY + colisionRange + 0.15) {
 							moveRight();
 						}
 					} else if (M[curMatX + 1][curMatY - 1] == 1) {
-						if (movementVector[0] < curWorldX + colisionRange) {
+						if (moveVec[0] < curWorldX + colisionRange) {
 							moveRight();
-						} else if (movementVector[2] >
-						           curWorldY - colisionRange + 0.15) {
+						} else if (moveVec[2] > curWorldY - colisionRange + 0.15) {
 							moveRight();
 						}
 					} else if (M[curMatX + 1][curMatY + 1] == 1) {
-						if (movementVector[0] < curWorldX + colisionRange) {
+						if (moveVec[0] < curWorldX + colisionRange) {
 							moveRight();
-						} else if (movementVector[2] <
-						           curWorldY + colisionRange + 0.15) {
+						} else if (moveVec[2] < curWorldY + colisionRange + 0.15) {
 							moveRight();
 						}
 					} else if (M[curMatX][curMatY - 1] == 1) {
-						if (movementVector[0] < curWorldX + colisionRange) {
+						if (moveVec[0] < curWorldX + colisionRange) {
 							moveRight();
-						} else if (movementVector[0] >
-						           curWorldX - colisionRange + 0.15) {
+						} else if (moveVec[0] > curWorldX - colisionRange + 0.15) {
 							moveRight();
 						}
 					} else if (M[curMatX][curMatY + 1] == 1) {
-						if (movementVector[0] < curWorldX + colisionRange) {
+						if (moveVec[0] < curWorldX + colisionRange) {
 							moveRight();
-						} else if (movementVector[2] <
-						           curWorldY + colisionRange + 0.15) {
+						} else if (moveVec[2] < curWorldY + colisionRange + 0.15) {
 							moveRight();
 						}
 					} else {
 						moveRight();
 					}
 				} else if (M[curMatX + 1][curMatY] == 1) {
-					if (movementVector[0] < curWorldX + colisionRange) {
+					if (moveVec[0] < curWorldX + colisionRange) {
 						moveRight();
 					}
 				} else {
@@ -1182,8 +1135,7 @@ void characterMovement() {
 	glutPostRedisplay();
 }
 
-//-------------------------K O O R D I N A T E   M I S
-// A-------------------------
+//-------------------------K O O R D I N A T E   M I S A-------------------------
 static void on_mouseMove(int x, int y) {
 	tempX = x - window_width / 2;
 	tempY = window_height - y - window_height / 2;
@@ -1197,27 +1149,26 @@ static void on_mouseLeftClick(int button, int state, int x, int y) {
 	}
 }
 
-//-------------------------F U N K C I J E   L I K O V
-// A-------------------------------------------
+//-------------------------F U N K C I J E   L I K O V A------------------------
 /*Inicijalizacija strukture metkova*/
 static void bulletInit() {
 	for (int i = 0; i != MAX_BULLETS_ON_SCREEN; i++) {
 		bullets[i].bulletSet = false;
-		bullets[i].getMovementVector = false;
+		bullets[i].getmoveVec = false;
 		bullets[i].bulletVelocity = 1.0;
 	}
 }
 /*Pucanje*/
 static void characterShoot() {
 	//     DecTest();
-	//     std::cout("(%f, %f) - (%d, %d) - (%d, %d)\n", movementVector[0],
-	//     movementVector[2], curWorldX, curWorldY, curMatX, curMatY);
+	//     std::cout("(%f, %f) - (%d, %d) - (%d, %d)\n", moveVec[0],
+	//     moveVec[2], curWorldX, curWorldY, curMatX, curMatY);
 	if (bulletTracker == MAX_BULLETS_ON_SCREEN) {
 		bulletTracker = 0;
 	}
 
 	bullets[bulletTracker].bulletSet = true;
-	bullets[bulletTracker].getMovementVector = true;
+	bullets[bulletTracker].getmoveVec = true;
 	bulletTracker++;
 }
 /*Kolizija metkova sa terenom i protivnicima - u zavisnosti od prosledjenog
@@ -1266,10 +1217,8 @@ static auto checkBulletColision(float x, float y, int colisionFlag) -> bool {
 	else if (colisionFlag == COLISION_ENEMY) {
 		for (int i = 0; i != MAX_BULLETS_ON_SCREEN; i++) {
 			if (bullets[i].bulletSet) {
-				if (bullets[i].currentX <= x + 0.5 &&
-				    bullets[i].currentX >= x - 0.5) {
-					if (bullets[i].currentZ <= y + 0.5 &&
-					    bullets[i].currentZ >= y - 0.5) {
+				if (bullets[i].currentX <= x + 0.5 && bullets[i].currentX >= x - 0.5) {
+					if (bullets[i].currentZ <= y + 0.5 && bullets[i].currentZ >= y - 0.5) {
 						/*Ako je doslo do kolizije, metku se resetuje pocetna
 						 * pozicija i brise se instanca*/
 						bullets[i].bulletVelocity = 1.0;
@@ -1296,8 +1245,7 @@ static void on_timerDeath(int value) {
 	}
 }
 
-//-------------------------------P R O T I V N I C
-// I-----------------------------
+//-------------------------------P R O T I V N I C I-----------------------------
 /*Inicijalni tajmer od 3 sekunde.
  Ovde omogucavamo pucanje, kretanje i protivnike*/
 static void on_timerInitial(int value) {
@@ -1312,8 +1260,7 @@ static void on_timerInitial(int value) {
 		movementEnabled = true;
 		shootingEnabled = true;
 		enemiesEnabled = true;
-		glutTimerFunc(TIMER_SPAWN_INTERVAL, on_timerSpawnInterval,
-		              TIMER_SPAWN_ID);
+		glutTimerFunc(TIMER_SPAWN_INTERVAL, on_timerSpawnInterval, TIMER_SPAWN_ID);
 	}
 }
 /*Tajmer za interval spawnovanja*/
@@ -1324,8 +1271,7 @@ static void on_timerSpawnInterval(int value) {
 			//             std::cout("Spawning...\n");
 			enemySpawn();
 			currentEnemyNumber++;
-			glutTimerFunc(TIMER_SPAWN_INTERVAL, on_timerSpawnInterval,
-			              TIMER_SPAWN_ID);
+			glutTimerFunc(TIMER_SPAWN_INTERVAL, on_timerSpawnInterval, TIMER_SPAWN_ID);
 		}
 	}
 }
@@ -1354,7 +1300,7 @@ static void enemySpawn() {
 	enemies[currentEnemyNumber].x = (i * 2) - matrixSizeX + 1;
 	enemies[currentEnemyNumber].y = (j * 2) - matrixSizeY + 1;
 	//     std::cout("(%f, %f) - %d - (%f, %f)\n", i, j, M[(int)i][(int)j],
-	//     movementVector[0], movementVector[2]);
+	//     moveVec[0], moveVec[2]);
 }
 static auto enemyNearPlayer(float i, float j) -> bool {
 	int tmpX = (int)i, tmpY = (int)j;
@@ -1394,33 +1340,28 @@ static void drawEnemy() {
 	glPopMatrix();
 }
 static void enemyMovement(int enemy) {
-	std::array<float, 2> enemyMovementVector;
-	std::array<float, 2> enemyMovementNormVector;
-	float enemyMovementVectorLength;
+	std::array<float, 2> enemyMoveVec;
+	std::array<float, 2> enemyMoveNormVec;
+	float enemyMoveVecLength;
 
 	float enemyPlayerDistance;
 
 	if (enemies[enemy].alive) {
-		enemyMovementVector[0] = movementVector[0] - enemies[enemy].x;
-		enemyMovementVector[1] = movementVector[2] - enemies[enemy].y;
+		enemyMoveVec[0] = moveVec[0] - enemies[enemy].x;
+		enemyMoveVec[1] = moveVec[2] - enemies[enemy].y;
 
-		enemyMovementVectorLength =
-		    (float)sqrt(enemyMovementVector[0] * enemyMovementVector[0] +
-		                enemyMovementVector[1] * enemyMovementVector[1]);
-		enemyMovementNormVector[0] =
-		    enemyMovementVector[0] / enemyMovementVectorLength;
-		enemyMovementNormVector[1] =
-		    enemyMovementVector[1] / enemyMovementVectorLength;
+		enemyMoveVecLength =
+		    (float)sqrt(enemyMoveVec[0] * enemyMoveVec[0] + enemyMoveVec[1] * enemyMoveVec[1]);
+		enemyMoveNormVec[0] = enemyMoveVec[0] / enemyMoveVecLength;
+		enemyMoveNormVec[1] = enemyMoveVec[1] / enemyMoveVecLength;
 
-		enemies[enemy].x += enemyMovementNormVector[0] * enemySpeed;
-		enemies[enemy].y += enemyMovementNormVector[1] * enemySpeed;
+		enemies[enemy].x += enemyMoveNormVec[0] * enemySpeed;
+		enemies[enemy].y += enemyMoveNormVec[1] * enemySpeed;
 
-		enemyPlayerDistance =
-		    (float)sqrt(pow(enemies[enemy].x - movementVector[0], 2) +
-		                pow(enemies[enemy].y - movementVector[2], 2));
+		enemyPlayerDistance = (float)sqrt(pow(enemies[enemy].x - moveVec[0], 2) +
+		                                  pow(enemies[enemy].y - moveVec[2], 2));
 
-		if (enemyPlayerDistance <=
-		    enemyDiameter / 2 + characterDiameter / 2 + 0.25) {
+		if (enemyPlayerDistance <= enemyDiameter / 2 + characterDiameter / 2 + 0.25) {
 			characterHealth -= 5;
 			characterHit++;
 			enemies[enemy].alive = false;
@@ -1428,8 +1369,7 @@ static void enemyMovement(int enemy) {
 	}
 }
 
-//------------------------I S P I S   N A   E K R A N
-// U---------------------------------------------
+//------------------------I S P I S   N A   E K R A N U------------------------
 static void output(GLfloat x, GLfloat y, const std::string &text) {
 	glPushMatrix();
 	glTranslatef(x, y, 0);
@@ -1486,8 +1426,7 @@ static void displayScore() {
 	glDisable(GL_LINE_SMOOTH);
 }
 
-static void displayText(GLfloat x, GLfloat y, GLfloat z,
-                        const std::string &text, GLfloat scale) {
+static void displayText(GLfloat x, GLfloat y, GLfloat z, const std::string &text, GLfloat scale) {
 	glPushMatrix();
 	glDisable(GL_LIGHTING);
 	glEnable(GL_BLEND);
@@ -1504,8 +1443,7 @@ static void displayText(GLfloat x, GLfloat y, GLfloat z,
 	glPopMatrix();
 }
 
-//-------------------------I N I C I J A L I Z A C I J A   T E R E N
-// A-----------------------------
+//-------------------------I N I C I J A L I Z A C I J A   T E R E N A-----------------------------
 static void DecLevelInit() {
 	tempX = window_width / 2;
 	tempY = window_height / 2;
@@ -1577,8 +1515,7 @@ static void DecLevelInit() {
 	}
 }
 
-//-------------------------G E N E R A C I J A   T E R E N
-// A---------------------------
+//-------------------------G E N E R A C I J A   T E R E N A---------------------------
 void DecPlane(float colorR, float colorG, float colorB) {
 
 	std::array<GLfloat, 4> material_ambient = {0.1, 0.1, 0.1, 1};
@@ -1595,13 +1532,11 @@ void DecPlane(float colorR, float colorG, float colorB) {
 	glutSolidCube(1);
 	glPopMatrix();
 }
-void DecFloorMatrix(float colorR, float colorG, float colorB,
-                    float cubeHeight) {
+void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) {
 	float color, localCubeHeight;
 	int xPos, yPos;
 
-	std::array<GLfloat, 4> material_diffuse_and_ambient_clear = {0.415, 415,
-	                                                             415, 1};
+	std::array<GLfloat, 4> material_diffuse_and_ambient_clear = {0.415, 415, 415, 1};
 	std::array<GLfloat, 4> material_diffuse_and_ambient_obstacle;
 	std::array<GLfloat, 4> material_specular = {0.5, 0.5, 0.5, 0.5};
 	std::array<GLfloat, 1> low_shininess = {15};
@@ -1615,10 +1550,8 @@ void DecFloorMatrix(float colorR, float colorG, float colorB,
 	material_diffuse_and_ambient_clear[3] = 1;
 
 	for (int i = 0; i != matrixSizeX; i++) {
-		glMaterialfv(GL_FRONT, GL_AMBIENT,
-		             material_diffuse_and_ambient_clear.data());
-		glMaterialfv(GL_FRONT, GL_DIFFUSE,
-		             material_diffuse_and_ambient_clear.data());
+		glMaterialfv(GL_FRONT, GL_AMBIENT, material_diffuse_and_ambient_clear.data());
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse_and_ambient_clear.data());
 		glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular.data());
 		glMaterialfv(GL_FRONT, GL_SHININESS, medium_shininess.data());
 		xPos = i - (matrixSizeX / 2);
@@ -1644,10 +1577,8 @@ void DecFloorMatrix(float colorR, float colorG, float colorB,
 				glPushMatrix();
 				glTranslatef(xPos * 2, localCubeHeight / 2, yPos * 2);
 				glScalef(1.8, localCubeHeight, 1.8);
-				glMaterialfv(GL_FRONT, GL_AMBIENT,
-				             material_diffuse_and_ambient_obstacle.data());
-				glMaterialfv(GL_FRONT, GL_DIFFUSE,
-				             material_diffuse_and_ambient_obstacle.data());
+				glMaterialfv(GL_FRONT, GL_AMBIENT, material_diffuse_and_ambient_obstacle.data());
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse_and_ambient_obstacle.data());
 				glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular.data());
 				glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess.data());
 				glutSolidCube(1);
@@ -1666,8 +1597,7 @@ static void DecTest() {
 		}
 		std::cout << "\n";
 	}
-	std::cout << "X i Y skalirani: " << matrixSizeX << ", " << matrixSizeY
-	          << "\n";
+	std::cout << "X i Y skalirani: " << matrixSizeX << ", " << matrixSizeY << "\n";
 }
 
 static void greska(const std::string &text) {

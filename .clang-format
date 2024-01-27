@@ -5,5 +5,7 @@ IndentWidth: '4'
 SpacesInSquareBrackets: 'false'
 TabWidth: '4'
 UseTab: ForIndentation
+ReflowComments: 'false'
+ColumnLimit: '100'
 
 ...
