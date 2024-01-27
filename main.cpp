@@ -178,6 +178,9 @@ static auto enemyNearPlayer(float i, float j) -> bool;
 static void drawEnemy();
 static void enemyMovement(int enemy);
 
+/*MISC*/
+static int frameCount = 0;
+
 auto main(int argc, char **argv) -> int {
 	/*Globalno svetlo*/
 	std::array<GLfloat, 4> light_ambient = {0, 0, 0, 1};
@@ -211,7 +214,7 @@ auto main(int argc, char **argv) -> int {
 			}
 		} else {
 			glutGameModeString("1366x768:32@60");
-			if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {
+			if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {		
 				window_width = 1366;
 				window_height = 768;
 				if (gameMode) {
@@ -267,6 +270,9 @@ static void on_reshape(int width, int height) {
 }
 
 static void on_display() {
+	// frameCount++;
+	// std::cout << frameCount << std::endl;
+
 	/* Brise se prethodni sadrzaj prozora. */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1449,7 +1455,7 @@ static void DecLevelInit() {
 		}
 	}
 
-	float **M_Obstacle;
+	// float **M_Obstacle; // Seg fault
 
 	M_Obstacle = new float *[matrixSizeX];
 	if (M_Obstacle == nullptr) {
@@ -1542,7 +1548,6 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 			yPos = j - (matrixSizeY / 2);
 			color = 0.55 - j * 0.03;
 			if (M[i][j] == 0) {
-
 				glPushMatrix();
 				glTranslatef(xPos * 2, 0.5, yPos * 2);
 				//                     glColor3f(0.88, 0.88, 0.9);
@@ -1556,7 +1561,7 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 				material_diffuse_and_ambient_obstacle[1] = color;
 				material_diffuse_and_ambient_obstacle[2] = color;
 				material_diffuse_and_ambient_obstacle[3] = 1;
-
+			
 				glPushMatrix();
 				glTranslatef(xPos * 2, localCubeHeight / 2, yPos * 2);
 				glScalef(1.8, localCubeHeight, 1.8);
