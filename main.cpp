@@ -374,7 +374,7 @@ static void on_display(){
                     bullets[i].bulletStartingPoint[1] = 1.0;
                     bullets[i].bulletStartingPoint[2] = movementVector[2];
                     
-                    bullets[i].bulletTrajLength = sqrt(currentRotationX*currentRotationX + currentRotationY*currentRotationY);
+                    bullets[i].bulletTrajLength = (float)sqrt(currentRotationX*currentRotationX + currentRotationY*currentRotationY);
                     bullets[i].bulletTrajNorm[0] = currentRotationX / bullets[i].bulletTrajLength;
                     bullets[i].bulletTrajNorm[1] = -currentRotationY / bullets[i].bulletTrajLength;
                     bullets[i].getMovementVector = false;
@@ -1233,14 +1233,14 @@ static void enemyMovement(int enemy){
         enemyMovementVector[0] = movementVector[0] - enemies[enemy].x;
         enemyMovementVector[1] = movementVector[2] - enemies[enemy].y;
         
-        enemyMovementVectorLength = sqrt(enemyMovementVector[0]*enemyMovementVector[0] + enemyMovementVector[1]*enemyMovementVector[1]);
+        enemyMovementVectorLength = (float)sqrt(enemyMovementVector[0]*enemyMovementVector[0] + enemyMovementVector[1]*enemyMovementVector[1]);
         enemyMovementNormVector[0] = enemyMovementVector[0]/enemyMovementVectorLength;
         enemyMovementNormVector[1] = enemyMovementVector[1]/enemyMovementVectorLength;
         
         enemies[enemy].x += enemyMovementNormVector[0] * enemySpeed;
         enemies[enemy].y += enemyMovementNormVector[1] * enemySpeed;
         
-        enemyPlayerDistance = sqrt(pow(enemies[enemy].x-movementVector[0],2) + pow(enemies[enemy].y-movementVector[2],2));
+        enemyPlayerDistance = (float)sqrt(pow(enemies[enemy].x-movementVector[0],2) + pow(enemies[enemy].y-movementVector[2],2));
         
         if (enemyPlayerDistance <= enemyDiameter/2 + characterDiameter/2 + 0.25){
             characterHealth -= 5;
