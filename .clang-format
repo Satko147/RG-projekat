@@ -1,0 +1,9 @@
+﻿---
+BasedOnStyle: LLVM
+BreakBeforeBraces: Attach
+IndentWidth: '4'
+SpacesInSquareBrackets: 'false'
+TabWidth: '4'
+UseTab: ForIndentation
+
+...
