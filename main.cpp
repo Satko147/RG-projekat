@@ -72,7 +72,7 @@ static bool notSetP = true;
 static int characterHealth = 20;
 static int characterHit = 0;
 static const float characterDiameter = 0.6;
-static std::array<float, 3> moveVec = {0.0f, 0.0f, 0.0f};
+static std::array<float, 3> moveVec = {0.0F, 0.0F, 0.0F};
 static float movementSpeed = 0.1;
 static float diagonalMovementMultiplier = 0.707107;
 static int curWorldX, curWorldY;           // Trenutna pozicija lika u worldspace-u.
@@ -195,7 +195,7 @@ auto main(int argc, char **argv) -> int {
 	glutCreateWindow("TDSS - Lvl 1");
 
 	glutGameModeString("1600x900:32@60");
-	if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE)) {
+	if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {
 		window_width = 1600;
 		window_height = 900;
 		if (gameMode) {
@@ -203,7 +203,7 @@ auto main(int argc, char **argv) -> int {
 		}
 	} else {
 		glutGameModeString("1920x1080:32@60");
-		if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE)) {
+		if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {
 			window_width = 1920;
 			window_height = 1080;
 			if (gameMode) {
@@ -211,7 +211,7 @@ auto main(int argc, char **argv) -> int {
 			}
 		} else {
 			glutGameModeString("1366x768:32@60");
-			if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE)) {
+			if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {
 				window_width = 1366;
 				window_height = 768;
 				if (gameMode) {
@@ -483,7 +483,7 @@ static void on_keyPress(unsigned char key, int x, int y) {
 	case 70:
 	case 102:
 		if (!(gameMode)) {
-			if (fullScr == false) {
+			if (!fullScr) {
 				glutFullScreen();
 				fullScr = true;
 			} else {
@@ -591,8 +591,10 @@ void characterMovement() {
 	 * odluciti na koju ce nas stranu skrenuti. Gleda se da li se nalazimo u
 	 * gornjem ili donjem trouglu polja u kojem smo, i skrece se na osnovu
 	 * toga.*/
-	int wa, wd;
-	float localX, localY;
+	int wa;
+	int wd;
+	float localX;
+	float localY;
 
 	localX = fmod(moveVec[0] + 1.0, 2);
 	if (localX < 0.0) {
@@ -1214,7 +1216,7 @@ static auto checkBulletColision(float x, float y, int colisionFlag) -> bool {
 		return false;
 	}
 	/*Kolizija sa protivnicima*/
-	else if (colisionFlag == COLISION_ENEMY) {
+	if (colisionFlag == COLISION_ENEMY) {
 		for (int i = 0; i != MAX_BULLETS_ON_SCREEN; i++) {
 			if (bullets[i].bulletSet) {
 				if (bullets[i].currentX <= x + 0.5 && bullets[i].currentX >= x - 0.5) {
@@ -1277,13 +1279,13 @@ static void on_timerSpawnInterval(int value) {
 }
 static void enemyInit() {
 	enemies = new enemy[maxEnemyNumber];
-	if (!enemies) {
+	if (enemies == nullptr) {
 		greska("Memory allocation failed\n");
 	}
 
 	for (int i = 0; i < maxEnemyNumber; i++) {
-		enemies[i].x = 0.0f; // Assuming default initialization
-		enemies[i].y = 0.0f; // Assuming default initialization
+		enemies[i].x = 0.0F; // Assuming default initialization
+		enemies[i].y = 0.0F; // Assuming default initialization
 		enemies[i].health = 10;
 		enemies[i].alive = true;
 	}
@@ -1291,7 +1293,8 @@ static void enemyInit() {
 	// enemies;'
 }
 static void enemySpawn() {
-	float i, j;
+	float i;
+	float j;
 	do {
 		i = (float)(rand() % matrixSizeX);
 		j = (float)(rand() % matrixSizeY);
@@ -1303,7 +1306,8 @@ static void enemySpawn() {
 	//     moveVec[0], moveVec[2]);
 }
 static auto enemyNearPlayer(float i, float j) -> bool {
-	int tmpX = (int)i, tmpY = (int)j;
+	int tmpX = (int)i;
+	int tmpY = (int)j;
 	for (int l = tmpX - 2; l != tmpX + 3; l++) {
 		for (int k = tmpY - 2; k != tmpY + 3; k++) {
 			if (l == curMatX && k == curMatY) {
@@ -1373,7 +1377,7 @@ static void enemyMovement(int enemy) {
 static void output(GLfloat x, GLfloat y, const std::string &text) {
 	glPushMatrix();
 	glTranslatef(x, y, 0);
-	glScalef(1 / 152.38f, 1 / 152.38f, 1 / 152.38f);
+	glScalef(1 / 152.38F, 1 / 152.38F, 1 / 152.38F);
 	for (const char &c : text) {
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, c);
 	}
@@ -1419,8 +1423,8 @@ static void displayScore() {
 	glEnable(GL_LINE_SMOOTH);
 	glDisable(GL_LIGHTING);
 	glColor3f(0.4, 0, 0);
-	output(1.5, gPlaneScaleY / 1.32, enemiesKilledStr.c_str());
-	output(-5, gPlaneScaleY / 1.32, playerLives.c_str());
+	output(1.5, gPlaneScaleY / 1.32, enemiesKilledStr);
+	output(-5, gPlaneScaleY / 1.32, playerLives);
 	glEnable(GL_LIGHTING);
 	glDisable(GL_BLEND);
 	glDisable(GL_LINE_SMOOTH);
@@ -1533,8 +1537,10 @@ void DecPlane(float colorR, float colorG, float colorB) {
 	glPopMatrix();
 }
 void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) {
-	float color, localCubeHeight;
-	int xPos, yPos;
+	float color;
+	float localCubeHeight;
+	int xPos;
+	int yPos;
 
 	std::array<GLfloat, 4> material_diffuse_and_ambient_clear = {0.415, 415, 415, 1};
 	std::array<GLfloat, 4> material_diffuse_and_ambient_obstacle;
