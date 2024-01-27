@@ -178,6 +178,9 @@ static auto enemyNearPlayer(float i, float j) -> bool;
 static void drawEnemy();
 static void enemyMovement(int enemy);
 
+/*MISC*/
+static int frameCount = 0;
+
 auto main(int argc, char **argv) -> int {
 	/*Globalno svetlo*/
 	std::array<GLfloat, 4> light_ambient = {0, 0, 0, 1};
@@ -211,7 +214,7 @@ auto main(int argc, char **argv) -> int {
 			}
 		} else {
 			glutGameModeString("1366x768:32@60");
-			if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {
+			if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {		
 				window_width = 1366;
 				window_height = 768;
 				if (gameMode) {
@@ -267,6 +270,9 @@ static void on_reshape(int width, int height) {
 }
 
 static void on_display() {
+	// frameCount++;
+	// std::cout << frameCount << std::endl;
+
 	/* Brise se prethodni sadrzaj prozora. */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -282,8 +288,7 @@ static void on_display() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	gluLookAt(0, (matrixSizeX + matrixSizeY) / 0.8, (matrixSizeX + matrixSizeY) / 2.8, 0, 0, 0, 0,
-	          1, 0);
+	gluLookAt(0, (matrixSizeX + matrixSizeY) / 0.8, (matrixSizeX + matrixSizeY) / 2.8, 0, 0, 0, 0, 1, 0);
 
 	std::array<GLfloat, 4> light_position = {0, 30, 0, 1};
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
@@ -377,18 +382,18 @@ static void on_display() {
 					bullets[i].bulletStartingPoint[1] = 1.0;
 					bullets[i].bulletStartingPoint[2] = moveVec[2];
 
-					bullets[i].bulletTrajLength = (float)sqrt(currentRotationX * currentRotationX +
-					                                          currentRotationY * currentRotationY);
+					bullets[i].bulletTrajLength =
+					    (float)sqrt(currentRotationX * currentRotationX + currentRotationY * currentRotationY);
 					bullets[i].bulletTrajNorm[0] = currentRotationX / bullets[i].bulletTrajLength;
 					bullets[i].bulletTrajNorm[1] = -currentRotationY / bullets[i].bulletTrajLength;
 					bullets[i].getmoveVec = false;
 				}
 
-				bullets[i].currentX = bullets[i].bulletStartingPoint[0] +
-				                      bullets[i].bulletVelocity * bullets[i].bulletTrajNorm[0];
+				bullets[i].currentX =
+				    bullets[i].bulletStartingPoint[0] + bullets[i].bulletVelocity * bullets[i].bulletTrajNorm[0];
 				bullets[i].currentY = bullets[i].bulletStartingPoint[1];
-				bullets[i].currentZ = bullets[i].bulletStartingPoint[2] +
-				                      bullets[i].bulletVelocity * bullets[i].bulletTrajNorm[1];
+				bullets[i].currentZ =
+				    bullets[i].bulletStartingPoint[2] + bullets[i].bulletVelocity * bullets[i].bulletTrajNorm[1];
 
 				glPushMatrix();
 				glTranslatef(bullets[i].currentX, bullets[i].currentY, bullets[i].currentZ);
@@ -398,8 +403,7 @@ static void on_display() {
 				glEnable(GL_LIGHTING);
 				glPopMatrix();
 				if (bullets[i].bulletVelocity >= maxBulletVelocity ||
-				    checkBulletColision(bullets[i].currentX, bullets[i].currentZ,
-				                        COLISION_TERRAIN)) {
+				    checkBulletColision(bullets[i].currentX, bullets[i].currentZ, COLISION_TERRAIN)) {
 					bullets[i].bulletSet = false;
 					bullets[i].bulletVelocity = 1.0;
 				}
@@ -638,14 +642,11 @@ void characterMovement() {
 			if (M[curMatX - 1][curMatY] == 1) {
 				if ((M[curMatX][curMatY - 1] == 1 && M[curMatX - 1][curMatY - 1] == 1) ||
 				    (M[curMatX][curMatY - 1] == 1 && M[curMatX - 1][curMatY - 1] == 0)) {
-					if (moveVec[0] > curWorldX - colisionRange &&
-					    moveVec[2] > curWorldY - colisionRange) {
+					if (moveVec[0] > curWorldX - colisionRange && moveVec[2] > curWorldY - colisionRange) {
 						moveUpLeft();
-					} else if (moveVec[0] <= curWorldX - colisionRange &&
-					           moveVec[2] > curWorldY - colisionRange) {
+					} else if (moveVec[0] <= curWorldX - colisionRange && moveVec[2] > curWorldY - colisionRange) {
 						moveUp();
-					} else if (moveVec[0] > curWorldX - colisionRange &&
-					           moveVec[2] <= curWorldY - colisionRange) {
+					} else if (moveVec[0] > curWorldX - colisionRange && moveVec[2] <= curWorldY - colisionRange) {
 						moveLeft();
 					}
 				} else {
@@ -662,8 +663,7 @@ void characterMovement() {
 					moveLeft();
 				}
 			} else if (M[curMatX - 1][curMatY - 1] == 1) {
-				if (!(moveVec[0] < curWorldX - colisionRange &&
-				      moveVec[2] < curWorldY - colisionRange)) {
+				if (!(moveVec[0] < curWorldX - colisionRange && moveVec[2] < curWorldY - colisionRange)) {
 					moveUpLeft();
 				} else {
 					if (wa == 1) {
@@ -707,14 +707,11 @@ void characterMovement() {
 			if (M[curMatX + 1][curMatY] == 1) {
 				if ((M[curMatX][curMatY - 1] == 1 && M[curMatX + 1][curMatY - 1] == 1) ||
 				    (M[curMatX][curMatY - 1] == 1 && M[curMatX + 1][curMatY - 1] == 0)) {
-					if (moveVec[0] < curWorldX + colisionRange &&
-					    moveVec[2] > curWorldY - colisionRange) {
+					if (moveVec[0] < curWorldX + colisionRange && moveVec[2] > curWorldY - colisionRange) {
 						moveUpRight();
-					} else if (moveVec[0] >= curWorldX + colisionRange &&
-					           moveVec[2] > curWorldY - colisionRange) {
+					} else if (moveVec[0] >= curWorldX + colisionRange && moveVec[2] > curWorldY - colisionRange) {
 						moveUp();
-					} else if (moveVec[0] < curWorldX + colisionRange &&
-					           moveVec[2] <= curWorldY - colisionRange) {
+					} else if (moveVec[0] < curWorldX + colisionRange && moveVec[2] <= curWorldY - colisionRange) {
 						moveRight();
 					}
 				} else {
@@ -732,8 +729,7 @@ void characterMovement() {
 				}
 			} else if (M[curMatX + 1][curMatY - 1] == 1) {
 
-				if (!(moveVec[0] > curWorldX + colisionRange &&
-				      moveVec[2] < curWorldY - colisionRange)) {
+				if (!(moveVec[0] > curWorldX + colisionRange && moveVec[2] < curWorldY - colisionRange)) {
 					moveUpRight();
 				} else {
 					if (wd == 1) {
@@ -778,14 +774,11 @@ void characterMovement() {
 			if (M[curMatX - 1][curMatY] == 1) {
 				if ((M[curMatX][curMatY + 1] == 1 && M[curMatX - 1][curMatY + 1] == 1) ||
 				    (M[curMatX][curMatY + 1] == 1 && M[curMatX - 1][curMatY + 1] == 0)) {
-					if (moveVec[0] > curWorldX - colisionRange &&
-					    moveVec[2] < curWorldY + colisionRange) {
+					if (moveVec[0] > curWorldX - colisionRange && moveVec[2] < curWorldY + colisionRange) {
 						moveDownLeft();
-					} else if (moveVec[0] <= curWorldX - colisionRange &&
-					           moveVec[2] < curWorldY + colisionRange) {
+					} else if (moveVec[0] <= curWorldX - colisionRange && moveVec[2] < curWorldY + colisionRange) {
 						moveDown();
-					} else if (moveVec[0] > curWorldX - colisionRange &&
-					           moveVec[2] >= curWorldY - colisionRange) {
+					} else if (moveVec[0] > curWorldX - colisionRange && moveVec[2] >= curWorldY - colisionRange) {
 						moveLeft();
 					}
 				} else {
@@ -802,8 +795,7 @@ void characterMovement() {
 					moveLeft();
 				}
 			} else if (M[curMatX - 1][curMatY + 1] == 1) {
-				if (!(moveVec[0] < curWorldX - colisionRange &&
-				      moveVec[2] > curWorldY + colisionRange)) {
+				if (!(moveVec[0] < curWorldX - colisionRange && moveVec[2] > curWorldY + colisionRange)) {
 					moveDownLeft();
 				} else {
 					if (wd == 0) {
@@ -849,14 +841,11 @@ void characterMovement() {
 			if (M[curMatX + 1][curMatY] == 1) {
 				if ((M[curMatX][curMatY + 1] == 1 && M[curMatX + 1][curMatY + 1] == 1) ||
 				    (M[curMatX][curMatY + 1] == 1 && M[curMatX + 1][curMatY + 1] == 0)) {
-					if (moveVec[0] < curWorldX + colisionRange &&
-					    moveVec[2] < curWorldY + colisionRange) {
+					if (moveVec[0] < curWorldX + colisionRange && moveVec[2] < curWorldY + colisionRange) {
 						moveDownRight();
-					} else if (moveVec[0] >= curWorldX + colisionRange &&
-					           moveVec[2] < curWorldY + colisionRange) {
+					} else if (moveVec[0] >= curWorldX + colisionRange && moveVec[2] < curWorldY + colisionRange) {
 						moveDown();
-					} else if (moveVec[0] < curWorldX + colisionRange &&
-					           moveVec[2] >= curWorldY - colisionRange) {
+					} else if (moveVec[0] < curWorldX + colisionRange && moveVec[2] >= curWorldY - colisionRange) {
 						moveRight();
 					}
 				} else {
@@ -874,8 +863,7 @@ void characterMovement() {
 				}
 			} else if (M[curMatX + 1][curMatY + 1] == 1) {
 
-				if (!(moveVec[0] > curWorldX + colisionRange &&
-				      moveVec[2] > curWorldY + colisionRange)) {
+				if (!(moveVec[0] > curWorldX + colisionRange && moveVec[2] > curWorldY + colisionRange)) {
 					moveDownRight();
 				} else {
 					if (wa == 0) {
@@ -925,8 +913,7 @@ void characterMovement() {
 						if (moveVec[2] > curWorldY - colisionRange) {
 							moveUp();
 						}
-					} else if (M[curMatX - 1][curMatY - 1] == 1 &&
-					           M[curMatX + 1][curMatY - 1] == 1) {
+					} else if (M[curMatX - 1][curMatY - 1] == 1 && M[curMatX + 1][curMatY - 1] == 1) {
 						if (moveVec[2] > curWorldY - colisionRange) {
 							moveUp();
 						} else if (moveVec[0] > curWorldX - colisionRange + 0.15 &&
@@ -979,8 +966,7 @@ void characterMovement() {
 						if (moveVec[0] > curWorldX - colisionRange) {
 							moveLeft();
 						}
-					} else if (M[curMatX - 1][curMatY - 1] == 1 &&
-					           M[curMatX - 1][curMatY + 1] == 1) {
+					} else if (M[curMatX - 1][curMatY - 1] == 1 && M[curMatX - 1][curMatY + 1] == 1) {
 						if (moveVec[0] > curWorldX - colisionRange) {
 							moveLeft();
 						} else if (moveVec[2] > curWorldY - colisionRange + 0.15 &&
@@ -1033,8 +1019,7 @@ void characterMovement() {
 						if (moveVec[2] < curWorldY + colisionRange) {
 							moveDown();
 						}
-					} else if (M[curMatX - 1][curMatY + 1] == 1 &&
-					           M[curMatX + 1][curMatY + 1] == 1) {
+					} else if (M[curMatX - 1][curMatY + 1] == 1 && M[curMatX + 1][curMatY + 1] == 1) {
 						if (moveVec[2] < curWorldY + colisionRange) {
 							moveDown();
 						} else if (moveVec[0] > curWorldX - colisionRange + 0.15 &&
@@ -1087,8 +1072,7 @@ void characterMovement() {
 						if (moveVec[0] < curWorldX + colisionRange) {
 							moveRight();
 						}
-					} else if (M[curMatX + 1][curMatY - 1] == 1 &&
-					           M[curMatX + 1][curMatY + 1] == 1) {
+					} else if (M[curMatX + 1][curMatY - 1] == 1 && M[curMatX + 1][curMatY + 1] == 1) {
 						if (moveVec[0] < curWorldX + colisionRange) {
 							moveRight();
 						} else if (moveVec[2] > curWorldY - colisionRange + 0.15 &&
@@ -1354,16 +1338,15 @@ static void enemyMovement(int enemy) {
 		enemyMoveVec[0] = moveVec[0] - enemies[enemy].x;
 		enemyMoveVec[1] = moveVec[2] - enemies[enemy].y;
 
-		enemyMoveVecLength =
-		    (float)sqrt(enemyMoveVec[0] * enemyMoveVec[0] + enemyMoveVec[1] * enemyMoveVec[1]);
+		enemyMoveVecLength = (float)sqrt(enemyMoveVec[0] * enemyMoveVec[0] + enemyMoveVec[1] * enemyMoveVec[1]);
 		enemyMoveNormVec[0] = enemyMoveVec[0] / enemyMoveVecLength;
 		enemyMoveNormVec[1] = enemyMoveVec[1] / enemyMoveVecLength;
 
 		enemies[enemy].x += enemyMoveNormVec[0] * enemySpeed;
 		enemies[enemy].y += enemyMoveNormVec[1] * enemySpeed;
 
-		enemyPlayerDistance = (float)sqrt(pow(enemies[enemy].x - moveVec[0], 2) +
-		                                  pow(enemies[enemy].y - moveVec[2], 2));
+		enemyPlayerDistance =
+		    (float)sqrt(pow(enemies[enemy].x - moveVec[0], 2) + pow(enemies[enemy].y - moveVec[2], 2));
 
 		if (enemyPlayerDistance <= enemyDiameter / 2 + characterDiameter / 2 + 0.25) {
 			characterHealth -= 5;
@@ -1472,7 +1455,7 @@ static void DecLevelInit() {
 		}
 	}
 
-	float **M_Obstacle;
+	// float **M_Obstacle; // Seg fault
 
 	M_Obstacle = new float *[matrixSizeX];
 	if (M_Obstacle == nullptr) {
@@ -1565,7 +1548,6 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 			yPos = j - (matrixSizeY / 2);
 			color = 0.55 - j * 0.03;
 			if (M[i][j] == 0) {
-
 				glPushMatrix();
 				glTranslatef(xPos * 2, 0.5, yPos * 2);
 				//                     glColor3f(0.88, 0.88, 0.9);
@@ -1579,7 +1561,7 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 				material_diffuse_and_ambient_obstacle[1] = color;
 				material_diffuse_and_ambient_obstacle[2] = color;
 				material_diffuse_and_ambient_obstacle[3] = 1;
-
+			
 				glPushMatrix();
 				glTranslatef(xPos * 2, localCubeHeight / 2, yPos * 2);
 				glScalef(1.8, localCubeHeight, 1.8);
