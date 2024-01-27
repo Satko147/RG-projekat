@@ -1,11 +1,11 @@
 ﻿---
 BasedOnStyle: LLVM
 BreakBeforeBraces: Attach
-IndentWidth: '4'
+IndentWidth: '1'
 SpacesInSquareBrackets: 'false'
-TabWidth: '4'
+TabWidth: '1'
 UseTab: ForIndentation
 ReflowComments: 'false'
-ColumnLimit: '100'
+ColumnLimit: '110'
 
 ...
