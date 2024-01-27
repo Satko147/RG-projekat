@@ -1,3 +1,5 @@
+#include <vector>
+#include <array>
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
@@ -12,7 +14,7 @@
   Meni ponekad glutGameMode pravi dropove u fpsu, pa ako se desi i tebi samo cepi ovo na false i fullsceenuj.*/
 #define GAME_MODE true
 
-#define STR_MAX_LEN 256
+// #define STR_MAX_LEN 256
 
 #define MAX_BULLETS_ON_SCREEN 20
 
@@ -36,12 +38,10 @@
  * M i M_obstacle su matrice preko kojih je realizovan teren. U matrici M, ako je M[i][j] == 0, na tom mestu nema prepreke, a ako je 1 onda ima.
  * Za 'i' i 'j' za koje vazi da je M[i][j] == 1, u matrici M_obstacle[i][j] se nalazi visina prepreke. Raspodela pozicija prepreka i njihove visine se 
  * generisu nasumicno u DecLevelInit(). 
- * gPlaneScaleX i gPlaneScaleY odredjuju duzinu stranica terena u worldspace koordinatnom sistemu, a matrixSizeX i matrixSizeY na osnovu toga
- * racunaju dimenzije samih matrica. 
+ * gPlaneScaleX i gPlaneScaleY odredjuju duzinu stranica terena u worldspace koordinatnom sistemu, a matrixSizeX i matrixSizeY na osnovu toga racunaju dimenzije samih matrica. 
  * Kamera i prikaz score-a nisu najbolje podeseni za slucajeve kad su gPlaneScale parametri manji od 31 ili veci od 41.
  */
-/*Stavio sam samo 3 rezolucije kao podrzane: '1600x900', '1920x1080' i '1366x768'. Ako ne odgovara ni jedna, dodaj u main jos jednu glutGameModeString() proveru 
- *za neku koju moze kod tebe.*/
+/* Stavio sam samo 3 rezolucije kao podrzane: '1600x900', '1920x1080' i '1366x768'. Ako ne odgovara ni jedna, dodaj u main jos jednu glutGameModeString() proveru za neku koju moze kod tebe.*/
 static float window_width, window_height;
 static int matrixSizeX, matrixSizeY;
 static int tempX, tempY;
@@ -52,20 +52,20 @@ static float **M_Obstacle;
 static const int maxEnemyNumber = 100;
 static int currentEnemyNumber = 0;
 static int enemiesKilledCounter = 0;
-static char enemiesKilledStr[STR_MAX_LEN];
-static char playerLives[STR_MAX_LEN];
+static std::string enemiesKilledStr;
+static std::string playerLives;
 
-/*MATRIXES*/
-static GLdouble ModelMatrix[16];
-static GLdouble ProjectionMatrix[16];
-static GLint ViewportMatrix[4];
+/*MATRICES*/
+static std::array<GLdouble, 16> ModelMatrix;
+static std::array<GLdouble, 16> ProjectionMatrix;
+static std::array<GLint, 4> ViewportMatrix;
 static bool notSetP = true;
 
 /*CHARACTER PARAMETERS*/
 static int characterHealth = 20;
 static int characterHit = 0;
 static const float characterDiameter = 0.6;
-static float movementVector[3] = {0,0,0};
+static std::array<float, 3> movementVector = {0.0f, 0.0f, 0.0f};
 static float movementSpeed = 0.1;
 static float diagonalMovementMultiplier = 0.707107;
 static int curWorldX, curWorldY; // Trenutna pozicija lika u worldspace-u.
@@ -94,7 +94,7 @@ static void characterShoot();
  * Za kretanje se koristi keyBuffer[i], gde i predstavlja ascii vrednost dugmeta na koja su kretanje bindovana.
  * Dok je dugme pritisnuto, keyBuffer[i] je true, false u suprotnom.
  */
-static bool keyBuffer[128];   
+static std::array<bool, 128> keyBuffer;   
 static void moveLeft();
 static void moveRight();
 static void moveUp();
@@ -128,10 +128,10 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight);
 
 /*BULLET PARAMETERS*/
 typedef struct{
-    float bulletStartingPoint[3];
-    float bulletTraj[2];
+    std::array<float, 3> bulletStartingPoint;
+    std::array<float, 2> bulletTraj;
+    std::array<float, 2> bulletTrajNorm;
     float bulletTrajLength;
-    float bulletTrajNorm[2];
     float currentX;
     float currentY;
     float currentZ;
@@ -139,7 +139,7 @@ typedef struct{
     bool getMovementVector;
     float bulletVelocity;
 } bullet;
-static bullet bullets[MAX_BULLETS_ON_SCREEN];
+static std::array<bullet, MAX_BULLETS_ON_SCREEN> bullets;
 static const int bulletDmg = 5;
 
 static int bulletTracker = 0;
@@ -175,10 +175,10 @@ static void enemyMovement(int enemy);
 auto main(int argc, char **argv) -> int
 {
     /*Globalno svetlo*/
-    GLfloat light_ambient[] = { 0, 0, 0, 1 };
-    GLfloat light_diffuse[] = { 0.425, 0.415, 0.4, 1 };
-    GLfloat light_specular[] = { 0.9, 0.9, 0.9, 1 };
-    GLfloat model_ambient[] = { 0.4, 0.4, 0.4, 1 };
+    std::array<GLfloat, 4> light_ambient = { 0, 0, 0, 1 };
+    std::array<GLfloat, 4> light_diffuse = { 0.425, 0.415, 0.4, 1 };
+    std::array<GLfloat, 4> light_specular = { 0.9, 0.9, 0.9, 1 };
+    std::array<GLfloat, 4> model_ambient = { 0.4, 0.4, 0.4, 1 };
     
     
     /* Inicijalizuje se GLUT. */
@@ -239,10 +239,10 @@ auto main(int argc, char **argv) -> int
     /*Svetlo*/
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, model_ambient);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient.data());
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse.data());
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular.data());
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, model_ambient.data());
     
     /*Inicijalizacija nekih parametara*/
     glutReshapeWindow(window_width, window_height);
@@ -285,8 +285,8 @@ static void on_display(){
               0, 0, 0, 
               0, 1, 0);
     
-    GLfloat light_position[4] = {0, 30, 0, 1};
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    std::array<GLfloat, 4> light_position = {0, 30, 0, 1};
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
     
     /*Iscrtavanje terena*/
     DecPlane(0.1, 0.1, 0.1);
@@ -342,16 +342,16 @@ static void on_display(){
         characterMovement();
     
     /*gluProject*/
-    glGetDoublev(GL_MODELVIEW_MATRIX, ModelMatrix);
+    glGetDoublev(GL_MODELVIEW_MATRIX, ModelMatrix.data());
     if (notSetP){
-        glGetDoublev(GL_PROJECTION_MATRIX, ProjectionMatrix);
+        glGetDoublev(GL_PROJECTION_MATRIX, ProjectionMatrix.data());
         notSetP = false;
     }
-    glGetIntegerv(GL_VIEWPORT, ViewportMatrix);
+    glGetIntegerv(GL_VIEWPORT, ViewportMatrix.data());
     
     /*Nalazimo koordiante naseg lika u koordinatama ekrana*/
     gluProject(movementVector[0], movementVector[1], movementVector[2],
-            ModelMatrix, ProjectionMatrix, ViewportMatrix,
+            ModelMatrix.data(), ProjectionMatrix.data(), ViewportMatrix.data(),
             &objWinX, &objWinY, &objWinZ);
     
     /*Racunanje rotacije*/
@@ -405,12 +405,12 @@ static void on_display(){
     glRotatef(atan2(currentRotationX, currentRotationY)*(-180)/M_PI, 0, 1, 0);
 
     /*Character main*/
-    GLfloat low_shininess[] = { 100 };
-    GLfloat material_ambient[] = {.3, .3, .3, 1};
-    GLfloat material_diffuse[] = {.8, .8, .7, 1};
-    glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse);
-    glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess);
+    std::array<GLfloat, 1> low_shininess = { 100 };
+    std::array<GLfloat, 4> material_ambient = {.3, .3, .3, 1};
+    std::array<GLfloat, 4> material_diffuse = {.8, .8, .7, 1};
+    glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient.data());
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse.data());
+    glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess.data());
     
     /*Gornja lopta*/
     glPushMatrix();
@@ -1197,12 +1197,12 @@ static auto enemyNearPlayer(float i, float j) -> bool{
     
 }
 static void drawEnemy(){
-    GLfloat low_shininess[] = { 100 };
-    GLfloat material_ambient[] = {0.8, .5, .5, 1};
-    GLfloat material_diffuse[] = {1, 0, 0, 1};
-    glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse);
-    glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess);
+    std::array<GLfloat, 1> low_shininess = { 100 };
+    std::array<GLfloat, 4> material_ambient = {0.8, .5, .5, 1};
+    std::array<GLfloat, 4> material_diffuse = {1, 0, 0, 1};
+    glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient.data());
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse.data());
+    glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess.data());
     
     glPushMatrix();
         glTranslatef(0, 0.1, 0);
@@ -1223,8 +1223,8 @@ static void drawEnemy(){
     glPopMatrix();
 }
 static void enemyMovement(int enemy){
-    float enemyMovementVector[2];
-    float enemyMovementNormVector[2];
+    std::array<float, 2> enemyMovementVector;
+    std::array<float, 2> enemyMovementNormVector;
     float enemyMovementVectorLength;
     
     float enemyPlayerDistance;
@@ -1272,7 +1272,7 @@ static void displayInitialCountdown(){
 static void displayScore() {
     std::ostringstream oss;
     oss << "Killed: " << enemiesKilledCounter;
-    std::string enemiesKilledStr = oss.str();
+    enemiesKilledStr = oss.str();
     oss.str(""); // Clearing the stream for reuse
 
     switch(characterHealth) {
@@ -1292,7 +1292,7 @@ static void displayScore() {
             oss << "Lives: ";
             break;
     }
-    std::string playerLives = oss.str();
+    playerLives = oss.str();
 
     // OpenGL rendering code remains unchanged
     glEnable(GL_BLEND);
@@ -1398,17 +1398,17 @@ static void DecLevelInit(){
 //-------------------------G E N E R A C I J A   T E R E N A---------------------------
 void DecPlane(float colorR, float colorG, float colorB){
     
-    GLfloat material_ambient[] = { 0.1, 0.1, 0.1, 1 };
-    GLfloat material_diffuse[] = {colorR, colorG, colorB, 1};
-    GLfloat material_specular[] = { 0.3, 0.3, 0.3, 1 };
-    GLfloat shininess[] = { 5 };
+    std::array<GLfloat, 4> material_ambient = { 0.1, 0.1, 0.1, 1 };
+    std::array<GLfloat, 4> material_diffuse = {colorR, colorG, colorB, 1};
+    std::array<GLfloat, 4> material_specular = { 0.3, 0.3, 0.3, 1 };
+    std::array<GLfloat, 1> shininess = { 5 };
     
     glPushMatrix();
         glScalef(gPlaneScaleX, 1, gPlaneScaleY);
-        glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
+        glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient.data());
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse.data());
+        glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular.data());
+        glMaterialfv(GL_FRONT, GL_SHININESS, shininess.data());
         glutSolidCube(1);
     glPopMatrix();
 }
@@ -1416,11 +1416,11 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight){
     float color, localCubeHeight;
     int xPos, yPos;
     
-    GLfloat material_diffuse_and_ambient_clear[] = {0.415, 415, 415, 1};
-    GLfloat material_diffuse_and_ambient_obstacle[4];
-    GLfloat material_specular[] = { 0.5, 0.5, 0.5, 0.5 };
-    GLfloat low_shininess[] = { 15 };
-    GLfloat medium_shininess[] = { 100 };
+    std::array<GLfloat, 4> material_diffuse_and_ambient_clear = {0.415, 415, 415, 1};
+    std::array<GLfloat, 4> material_diffuse_and_ambient_obstacle;
+    std::array<GLfloat, 4> material_specular = { 0.5, 0.5, 0.5, 0.5 };
+    std::array<GLfloat, 1> low_shininess = { 15 };
+    std::array<GLfloat, 1> medium_shininess = { 100 };
     
     // 1 ako ima prepreke
     // 0 ako nema
@@ -1430,10 +1430,10 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight){
     material_diffuse_and_ambient_clear[3] = 1;
     
     for (int i=0; i!=matrixSizeX; i++){
-        glMaterialfv(GL_FRONT, GL_AMBIENT, material_diffuse_and_ambient_clear);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse_and_ambient_clear);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, medium_shininess);
+        glMaterialfv(GL_FRONT, GL_AMBIENT, material_diffuse_and_ambient_clear.data());
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse_and_ambient_clear.data());
+        glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular.data());
+        glMaterialfv(GL_FRONT, GL_SHININESS, medium_shininess.data());
         xPos = i-(matrixSizeX/2);
         for (int j=0; j!=matrixSizeY; j++){
             yPos = j-(matrixSizeY/2);
@@ -1458,10 +1458,10 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight){
                 glPushMatrix();
                     glTranslatef(xPos*2, localCubeHeight/2, yPos*2);
                     glScalef(1.8, localCubeHeight, 1.8);
-                    glMaterialfv(GL_FRONT, GL_AMBIENT, material_diffuse_and_ambient_obstacle);
-                    glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse_and_ambient_obstacle);
-                    glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular);
-                    glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess);
+                    glMaterialfv(GL_FRONT, GL_AMBIENT, material_diffuse_and_ambient_obstacle.data());
+                    glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse_and_ambient_obstacle.data());
+                    glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular.data());
+                    glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess.data());
                     glutSolidCube(1);
                 glPopMatrix();
             }
