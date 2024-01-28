@@ -1,10 +1,12 @@
 #include <GL/glut.h>
+#include <GL/freeglut.h> 
 #include <array>
 #include <cmath>
 #include <cstdbool>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <chrono>
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -73,7 +75,7 @@ static int characterHealth = 20;
 static int characterHit = 0;
 static const float characterDiameter = 0.6;
 static std::array<float, 3> moveVec = {0.0F, 0.0F, 0.0F};
-static float movementSpeed = 0.1;
+static float movementSpeed = 0.1F;
 static float diagonalMovementMultiplier = 0.707107;
 static int curWorldX, curWorldY;           // Trenutna pozicija lika u worldspace-u.
 static int curMatX, curMatY;               // Trenutna pozicija lika u matrici.
@@ -90,6 +92,7 @@ static void output(GLfloat x, GLfloat y, const std::string &text);
 static void greska(const std::string &text);
 static void DecLevelInit();
 static void DecTest();
+static void drawCylinder(GLdouble base, GLdouble top, GLdouble height, GLint slices, GLint stacks);
 
 static bool shootingEnabled = false;
 static bool enemiesEnabled = false;
@@ -170,8 +173,8 @@ using enemy = struct {
 	bool alive;
 };
 static enemy *enemies;
-static const float enemyDiameter = 0.6;
-static float enemySpeed = 0.102;
+static const float enemyDiameter = 0.6F;
+static float enemySpeed = 0.102F;
 static void enemyInit();
 static void enemySpawn();
 static auto enemyNearPlayer(float i, float j) -> bool;
@@ -179,7 +182,30 @@ static void drawEnemy();
 static void enemyMovement(int enemy);
 
 /*MISC*/
-static int frameCount = 0;
+// static float LOW_LIMIT = 0.0167F;          // Keep At/Below 60fps
+// static float HIGH_LIMIT = 0.1F;            // Keep At/Above 10fps
+// static float lastTime = 0.0F;
+// static float deltaTime = 0.0F;
+static void exitGame();
+
+std::string makeMeString(GLint versionRaw) {
+    std::stringstream ss;
+    std::string str = "\0";
+
+    ss << versionRaw;    // transfers versionRaw value into "ss"
+    str = ss.str();        // sets the "str" string as the "ss" value
+    return str;
+}
+
+/**
+* Format the string as expected
+*/
+void formatMe(std::string *text) {
+    std::string dot = ".";
+
+    text->insert(1, dot); // transforms 30000 into 3.0000
+    text->insert(4, dot); // transforms 3.0000 into 3.00.00
+}
 
 auto main(int argc, char **argv) -> int {
 	/*Globalno svetlo*/
@@ -257,6 +283,19 @@ auto main(int argc, char **argv) -> int {
 
 	// DecTest();
 
+	const char *versionGL = "\0";
+    GLint versionFreeGlutInt = 0;
+
+    versionGL = (char *)(glGetString(GL_VERSION));
+    versionFreeGlutInt = (glutGet(GLUT_VERSION));
+
+    std::string versionFreeGlutString = makeMeString(versionFreeGlutInt);
+    formatMe(&versionFreeGlutString);
+
+    std::cout << std::endl;
+    std::cout << "OpenGL version: " << versionGL << std::endl;
+    std::cout << "FreeGLUT version: " << versionFreeGlutString << std::endl;
+
 	/* Program ulazi u glavnu petlju. */
 	glutMainLoop();
 
@@ -270,8 +309,18 @@ static void on_reshape(int width, int height) {
 }
 
 static void on_display() {
-	// frameCount++;
-	// std::cout << frameCount << std::endl;
+	/* Racunanje deltaTime */
+	// auto now = std::chrono::system_clock::now();
+    // auto duration = now.time_since_epoch();
+    // auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    // float currentTime = static_cast<float>(millis);
+	// deltaTime = ( currentTime - lastTime ) / 1000.0f;
+	// if ( deltaTime < LOW_LIMIT )
+	// 	deltaTime = LOW_LIMIT;
+	// else if ( deltaTime > HIGH_LIMIT )
+	// 	deltaTime = HIGH_LIMIT;
+
+	// lastTime = currentTime;
 
 	/* Brise se prethodni sadrzaj prozora. */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -413,7 +462,7 @@ static void on_display() {
 
 	/*Pomeranje i rotacija igraca*/
 	glTranslatef(moveVec[0], 1, moveVec[2]);
-	glRotatef(atan2(currentRotationX, currentRotationY) * (-180) / M_PI, 0, 1, 0);
+	glRotatef((atan2(currentRotationX, currentRotationY) * (-180) / M_PI), 0, 1, 0);
 
 	/*Character main*/
 	std::array<GLfloat, 1> low_shininess = {100};
@@ -431,9 +480,9 @@ static void on_display() {
 	glPopMatrix();
 	/*Cilindar*/
 	glPushMatrix();
-	glTranslatef(0, 1.05, 0);
+	glTranslatef(0, 0.5, 0);
 	glRotatef(90, 1, 0, 0);
-	gluCylinder(gluNewQuadric(), characterDiameter, characterDiameter, 1, 20, 1);
+	drawCylinder(characterDiameter, characterDiameter, 1, 20, 1);
 	glPopMatrix();
 	/*Donja lopta*/
 	glPushMatrix();
@@ -498,15 +547,7 @@ static void on_keyPress(unsigned char key, int x, int y) {
 		break;
 	/* Zavrsava se program. */
 	case 27:
-		for (int i = 0; i != matrixSizeX; i++) {
-			free(M[i]);
-			free(M_Obstacle[i]);
-		}
-		free(M);
-		free(M_Obstacle);
-		free(enemies);
-
-		exit(0);
+		exitGame();
 		break;
 	}
 }
@@ -1220,15 +1261,51 @@ static auto checkBulletColision(float x, float y, int colisionFlag) -> bool {
 /*Posle gubljenja svih zivota, igra se gasi nakon 1.5 sekunde*/
 static void on_timerDeath(int value) {
 	if (value == TIMER_DEATH_ID) {
-		for (int i = 0; i != matrixSizeX; i++) {
-			free(M[i]);
-			free(M_Obstacle[i]);
-		}
-		free(M);
-		free(M_Obstacle);
-		free(enemies);
-		exit(0);
+		exitGame();
 	}
+}
+// Custom iscrtavanje cilindra
+static void drawCylinder(GLdouble base, GLdouble top, GLdouble height, GLint slices, GLint stacks) {
+    std::vector<float> vertices;
+
+    for (int j = 0; j <= stacks; ++j) {
+        float stackHeight1 = j * height / stacks;
+        float stackRadius1 = base + (top - base) * (stackHeight1 / height);
+        float stackHeight2 = (j + 1) * height / stacks;
+        float stackRadius2 = base + (top - base) * (stackHeight2 / height);
+
+        for (int i = 0; i <= slices; ++i) {
+            float angle = 2.0f * M_PI * i / slices;
+            float x = cos(angle);
+            float z = sin(angle);
+
+            // Lower vertex
+            vertices.push_back(x * stackRadius1);
+            vertices.push_back(stackHeight1 - height / 2);
+            vertices.push_back(z * stackRadius1);
+
+            // Upper vertex
+            vertices.push_back(x * stackRadius2);
+            vertices.push_back(stackHeight2 - height / 2);
+            vertices.push_back(z * stackRadius2);
+        }
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    
+    // Rotate 90 degrees around the X-axis
+    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
+
+    for (int j = 0; j < stacks; ++j) {
+        glDrawArrays(GL_TRIANGLE_STRIP, j * (slices + 1) * 2, (slices + 1) * 2);
+    }
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glPopMatrix();
 }
 
 //-------------------------------P R O T I V N I C I-----------------------------
@@ -1316,9 +1393,9 @@ static void drawEnemy() {
 	glPopMatrix();
 	/*Cilindar*/
 	glPushMatrix();
-	glTranslatef(0, 1.05, 0);
+	glTranslatef(0, 0.5, 0);
 	glRotatef(90, 1, 0, 0);
-	gluCylinder(gluNewQuadric(), enemyDiameter, enemyDiameter, 1, 20, 1);
+	drawCylinder(enemyDiameter, enemyDiameter, 1, 20, 1);
 	glPopMatrix();
 	/*Donja lopta*/
 	glPushMatrix();
@@ -1576,6 +1653,21 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 	}
 }
 
+//-------------------------T E S T   F U N K C I J A-------------------------
+static void freeMemory() {
+	for (int i = 0; i != matrixSizeX; i++) {
+		delete[] M[i];
+		delete[] M_Obstacle[i];
+	}
+	delete[] enemies;
+	delete[] M;
+	delete[] M_Obstacle;
+}
+static void exitGame() {
+	freeMemory();
+	glutLeaveMainLoop();
+	exit(0);
+}
 //-------------------------T E S T   F U N K C I J A-------------------------
 static void DecTest() {
 	std::cout << "Matrica:\n";
