@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <chrono>
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -75,7 +74,7 @@ static int characterHealth = 20;
 static int characterHit = 0;
 static const float characterDiameter = 0.6;
 static std::array<float, 3> moveVec = {0.0F, 0.0F, 0.0F};
-static float movementSpeed = 0.1F;
+static float movementSpeed = 0.1;
 static float diagonalMovementMultiplier = 0.707107;
 static int curWorldX, curWorldY;           // Trenutna pozicija lika u worldspace-u.
 static int curMatX, curMatY;               // Trenutna pozicija lika u matrici.
@@ -173,8 +172,8 @@ using enemy = struct {
 	bool alive;
 };
 static enemy *enemies;
-static const float enemyDiameter = 0.6F;
-static float enemySpeed = 0.102F;
+static const float enemyDiameter = 0.6;
+static float enemySpeed = 0.102;
 static void enemyInit();
 static void enemySpawn();
 static auto enemyNearPlayer(float i, float j) -> bool;
@@ -182,10 +181,7 @@ static void drawEnemy();
 static void enemyMovement(int enemy);
 
 /*MISC*/
-// static float LOW_LIMIT = 0.0167F;          // Keep At/Below 60fps
-// static float HIGH_LIMIT = 0.1F;            // Keep At/Above 10fps
-// static float lastTime = 0.0F;
-// static float deltaTime = 0.0F;
+static int frameCount = 0;
 static void exitGame();
 
 std::string makeMeString(GLint versionRaw) {
@@ -309,18 +305,8 @@ static void on_reshape(int width, int height) {
 }
 
 static void on_display() {
-	/* Racunanje deltaTime */
-	// auto now = std::chrono::system_clock::now();
-    // auto duration = now.time_since_epoch();
-    // auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    // float currentTime = static_cast<float>(millis);
-	// deltaTime = ( currentTime - lastTime ) / 1000.0f;
-	// if ( deltaTime < LOW_LIMIT )
-	// 	deltaTime = LOW_LIMIT;
-	// else if ( deltaTime > HIGH_LIMIT )
-	// 	deltaTime = HIGH_LIMIT;
-
-	// lastTime = currentTime;
+	// frameCount++;
+	// std::cout << frameCount << std::endl;
 
 	/* Brise se prethodni sadrzaj prozora. */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -462,7 +448,7 @@ static void on_display() {
 
 	/*Pomeranje i rotacija igraca*/
 	glTranslatef(moveVec[0], 1, moveVec[2]);
-	glRotatef((atan2(currentRotationX, currentRotationY) * (-180) / M_PI), 0, 1, 0);
+	glRotatef(atan2(currentRotationX, currentRotationY) * (-180) / M_PI, 0, 1, 0);
 
 	/*Character main*/
 	std::array<GLfloat, 1> low_shininess = {100};
