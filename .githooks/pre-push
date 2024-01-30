@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Hook koji ce proveravati da li kod prolazi kompilaciju pre pushvanja
+# Hook koji ce proveravati da li kod prolazi kompilaciju pre pushvanja.
 
 mkdir -p build
 cd build

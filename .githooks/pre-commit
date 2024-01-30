@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Hook koji ce provuci stage-ovane fajlove kroz clang-tidy i obezbediti da ispunjavaju definisani standard.
 
