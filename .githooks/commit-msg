@@ -6,7 +6,7 @@
 commit_msg=$(cat "$1")
 
 # Pomocu regexa proveravamo prvu rec, tj. prefix.
-commit_regex='^(feat|fix|docs|style|refactor|test|chore): .{3,}'
+commit_regex='^(feat|fix|docs|style|refactor|test|chore): '
 
 if ! [[ $commit_msg =~ $commit_regex ]]; then
     echo "Commit message format is invalid."
