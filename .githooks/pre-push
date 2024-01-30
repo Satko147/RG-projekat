@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Hook koji ce proveravati da li kod prolazi kompilaciju pre pushvanja.
+
+mkdir -p build
+cd build
+cmake ..
+make
+
+if [ $? -ne 0 ]; then
+    echo "Build failed. Please fix compilation errors before pushing."
+    exit 1
+fi
+
+echo "Build succeeded. Proceeding with push."

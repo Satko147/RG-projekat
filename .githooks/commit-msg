@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Hook koji proverava format commit poruka (podrazumevan prefix).
+
+# Dohvatamo poruku
+commit_msg=$(cat "$1")
+
+# Pomocu regexa proveravamo prvu rec, tj. prefix.
+commit_regex='^(feat|fix|docs|style|refactor|test|chore): '
+
+if ! [[ $commit_msg =~ $commit_regex ]]; then
+    echo "Commit message format is invalid."
+    echo "Your commit message must start with one of the following prefixes:"
+    echo "feat:, fix:, docs:, style:, refactor:, test:, chore:"
+    echo "Followed by a space and a brief description."
+    exit 1
+fi

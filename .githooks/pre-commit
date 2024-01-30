@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Hook koji ce provuci stage-ovane fajlove kroz clang-tidy i obezbediti da ispunjavaju definisani standard.
+
+# Provera da li je clang-format instaliran
+if ! which clang-format > /dev/null 2>&1; then
+    echo "clang-format is not installed. Please install to proceed."
+    exit 1
+fi
+
+# Provera stage-ovanih fajlova
+for file in $(git diff --cached --name-only | grep -E "\.(cpp|h)$"); do
+    # Use clang-format to check formatting
+    clang-format -style=file -output-replacements-xml "$file" | grep "<replacement " > /dev/null
+    if [ $? -ne 1 ]; then
+        echo "$file does not adhere to the defined coding standard."
+        echo "Please format the file using clang-format and try again."
+        exit 1
+    fi
+done
