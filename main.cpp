@@ -1,12 +1,12 @@
+#include <GL/freeglut.h>
 #include <GL/glut.h>
-#include <GL/freeglut.h> 
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstdbool>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <chrono>
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -189,22 +189,22 @@ static void enemyMovement(int enemy);
 static void exitGame();
 
 std::string makeMeString(GLint versionRaw) {
-    std::stringstream ss;
-    std::string str = "\0";
+	std::stringstream ss;
+	std::string str = "\0";
 
-    ss << versionRaw;    // transfers versionRaw value into "ss"
-    str = ss.str();        // sets the "str" string as the "ss" value
-    return str;
+	ss << versionRaw; // transfers versionRaw value into "ss"
+	str = ss.str();   // sets the "str" string as the "ss" value
+	return str;
 }
 
 /**
 * Format the string as expected
 */
 void formatMe(std::string *text) {
-    std::string dot = ".";
+	std::string dot = ".";
 
-    text->insert(1, dot); // transforms 30000 into 3.0000
-    text->insert(4, dot); // transforms 3.0000 into 3.00.00
+	text->insert(1, dot); // transforms 30000 into 3.0000
+	text->insert(4, dot); // transforms 3.0000 into 3.00.00
 }
 
 auto main(int argc, char **argv) -> int {
@@ -240,7 +240,7 @@ auto main(int argc, char **argv) -> int {
 			}
 		} else {
 			glutGameModeString("1366x768:32@60");
-			if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {		
+			if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) != 0) {
 				window_width = 1366;
 				window_height = 768;
 				if (gameMode) {
@@ -284,17 +284,17 @@ auto main(int argc, char **argv) -> int {
 	// DecTest();
 
 	const char *versionGL = "\0";
-    GLint versionFreeGlutInt = 0;
+	GLint versionFreeGlutInt = 0;
 
-    versionGL = (char *)(glGetString(GL_VERSION));
-    versionFreeGlutInt = (glutGet(GLUT_VERSION));
+	versionGL = (char *)(glGetString(GL_VERSION));
+	versionFreeGlutInt = (glutGet(GLUT_VERSION));
 
-    std::string versionFreeGlutString = makeMeString(versionFreeGlutInt);
-    formatMe(&versionFreeGlutString);
+	std::string versionFreeGlutString = makeMeString(versionFreeGlutInt);
+	formatMe(&versionFreeGlutString);
 
-    std::cout << std::endl;
-    std::cout << "OpenGL version: " << versionGL << std::endl;
-    std::cout << "FreeGLUT version: " << versionFreeGlutString << std::endl;
+	std::cout << std::endl;
+	std::cout << "OpenGL version: " << versionGL << std::endl;
+	std::cout << "FreeGLUT version: " << versionFreeGlutString << std::endl;
 
 	/* Program ulazi u glavnu petlju. */
 	glutMainLoop();
@@ -311,9 +311,9 @@ static void on_reshape(int width, int height) {
 static void on_display() {
 	/* Racunanje deltaTime */
 	// auto now = std::chrono::system_clock::now();
-    // auto duration = now.time_since_epoch();
-    // auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    // float currentTime = static_cast<float>(millis);
+	// auto duration = now.time_since_epoch();
+	// auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+	// float currentTime = static_cast<float>(millis);
 	// deltaTime = ( currentTime - lastTime ) / 1000.0f;
 	// if ( deltaTime < LOW_LIMIT )
 	// 	deltaTime = LOW_LIMIT;
@@ -1266,46 +1266,46 @@ static void on_timerDeath(int value) {
 }
 // Custom iscrtavanje cilindra
 static void drawCylinder(GLdouble base, GLdouble top, GLdouble height, GLint slices, GLint stacks) {
-    std::vector<float> vertices;
+	std::vector<float> vertices;
 
-    for (int j = 0; j <= stacks; ++j) {
-        float stackHeight1 = j * height / stacks;
-        float stackRadius1 = base + (top - base) * (stackHeight1 / height);
-        float stackHeight2 = (j + 1) * height / stacks;
-        float stackRadius2 = base + (top - base) * (stackHeight2 / height);
+	for (int j = 0; j <= stacks; ++j) {
+		float stackHeight1 = j * height / stacks;
+		float stackRadius1 = base + (top - base) * (stackHeight1 / height);
+		float stackHeight2 = (j + 1) * height / stacks;
+		float stackRadius2 = base + (top - base) * (stackHeight2 / height);
 
-        for (int i = 0; i <= slices; ++i) {
-            float angle = 2.0f * M_PI * i / slices;
-            float x = cos(angle);
-            float z = sin(angle);
+		for (int i = 0; i <= slices; ++i) {
+			float angle = 2.0f * M_PI * i / slices;
+			float x = cos(angle);
+			float z = sin(angle);
 
-            // Lower vertex
-            vertices.push_back(x * stackRadius1);
-            vertices.push_back(stackHeight1 - height / 2);
-            vertices.push_back(z * stackRadius1);
+			// Lower vertex
+			vertices.push_back(x * stackRadius1);
+			vertices.push_back(stackHeight1 - height / 2);
+			vertices.push_back(z * stackRadius1);
 
-            // Upper vertex
-            vertices.push_back(x * stackRadius2);
-            vertices.push_back(stackHeight2 - height / 2);
-            vertices.push_back(z * stackRadius2);
-        }
-    }
+			// Upper vertex
+			vertices.push_back(x * stackRadius2);
+			vertices.push_back(stackHeight2 - height / 2);
+			vertices.push_back(z * stackRadius2);
+		}
+	}
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    
-    // Rotate 90 degrees around the X-axis
-    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
 
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
+	// Rotate 90 degrees around the X-axis
+	glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
 
-    for (int j = 0; j < stacks; ++j) {
-        glDrawArrays(GL_TRIANGLE_STRIP, j * (slices + 1) * 2, (slices + 1) * 2);
-    }
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glPopMatrix();
+	for (int j = 0; j < stacks; ++j) {
+		glDrawArrays(GL_TRIANGLE_STRIP, j * (slices + 1) * 2, (slices + 1) * 2);
+	}
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glPopMatrix();
 }
 
 //-------------------------------P R O T I V N I C I-----------------------------
@@ -1407,22 +1407,20 @@ static void drawEnemy() {
 static void enemyMovement(int enemy) {
 	std::array<float, 2> enemyMoveVec;
 	std::array<float, 2> enemyMoveNormVec;
-	float enemyMoveVecLength;
-
-	float enemyPlayerDistance;
 
 	if (enemies[enemy].alive) {
 		enemyMoveVec[0] = moveVec[0] - enemies[enemy].x;
 		enemyMoveVec[1] = moveVec[2] - enemies[enemy].y;
 
-		enemyMoveVecLength = (float)sqrt(enemyMoveVec[0] * enemyMoveVec[0] + enemyMoveVec[1] * enemyMoveVec[1]);
+		float enemyMoveVecLength =
+		    (float)sqrt(enemyMoveVec[0] * enemyMoveVec[0] + enemyMoveVec[1] * enemyMoveVec[1]);
 		enemyMoveNormVec[0] = enemyMoveVec[0] / enemyMoveVecLength;
 		enemyMoveNormVec[1] = enemyMoveVec[1] / enemyMoveVecLength;
 
 		enemies[enemy].x += enemyMoveNormVec[0] * enemySpeed;
 		enemies[enemy].y += enemyMoveNormVec[1] * enemySpeed;
 
-		enemyPlayerDistance =
+		float enemyPlayerDistance =
 		    (float)sqrt(pow(enemies[enemy].x - moveVec[0], 2) + pow(enemies[enemy].y - moveVec[2], 2));
 
 		if (enemyPlayerDistance <= enemyDiameter / 2 + characterDiameter / 2 + 0.25) {
@@ -1599,8 +1597,6 @@ void DecPlane(float colorR, float colorG, float colorB) {
 void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) {
 	float color;
 	float localCubeHeight;
-	int xPos;
-	int yPos;
 
 	std::array<GLfloat, 4> material_diffuse_and_ambient_clear = {0.415, 415, 415, 1};
 	std::array<GLfloat, 4> material_diffuse_and_ambient_obstacle;
@@ -1620,9 +1616,9 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse_and_ambient_clear.data());
 		glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular.data());
 		glMaterialfv(GL_FRONT, GL_SHININESS, medium_shininess.data());
-		xPos = i - (matrixSizeX / 2);
+		float xPos = i - (matrixSizeX / 2);
 		for (int j = 0; j != matrixSizeY; j++) {
-			yPos = j - (matrixSizeY / 2);
+			float yPos = j - (matrixSizeY / 2);
 			color = 0.55 - j * 0.03;
 			if (M[i][j] == 0) {
 				glPushMatrix();
@@ -1638,7 +1634,7 @@ void DecFloorMatrix(float colorR, float colorG, float colorB, float cubeHeight) 
 				material_diffuse_and_ambient_obstacle[1] = color;
 				material_diffuse_and_ambient_obstacle[2] = color;
 				material_diffuse_and_ambient_obstacle[3] = 1;
-			
+
 				glPushMatrix();
 				glTranslatef(xPos * 2, localCubeHeight / 2, yPos * 2);
 				glScalef(1.8, localCubeHeight, 1.8);
